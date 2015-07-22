@@ -31,8 +31,9 @@ func TestNumberDecodes(t *testing.T) {
 	assert.Equal(t, float64(0x4242), o.GetNumber())
 
 	o = NewNumber()
-	err = o.DecodeFrom(bytes, 0)
+	n, err := o.DecodeFrom(bytes, 0)
 	assert.Nil(t, err)
+	assert.Equal(t, 8, n)
 	assert.Equal(t, float64(0x4242), o.GetNumber())
 }
 

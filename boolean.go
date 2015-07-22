@@ -26,13 +26,13 @@ func (n *Boolean) Decode(r io.Reader) error {
 }
 
 // Implements AmfType.DecodeFrom
-func (n *Boolean) DecodeFrom(slice []byte, pos int) error {
+func (n *Boolean) DecodeFrom(slice []byte, pos int) (int, error) {
 	if len(slice) == 0 {
-		return io.EOF
+		return 0, io.EOF
 	}
 
 	n.isTrue = slice[0] > 0
-	return nil
+	return 1, nil
 }
 
 // Gets the contained boolean

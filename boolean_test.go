@@ -22,8 +22,9 @@ func TestBooleanDecodes(t *testing.T) {
 	assert.True(t, o.True())
 
 	o = NewBoolean()
-	err = o.DecodeFrom(bytes, 0)
+	n, err := o.DecodeFrom(bytes, 0)
 	assert.Nil(t, err)
+	assert.Equal(t, 1, n)
 	assert.True(t, o.True())
 }
 

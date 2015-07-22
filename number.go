@@ -23,19 +23,20 @@ func (n *Number) Decode(r io.Reader) error {
 		return err
 	}
 
-	return n.DecodeFrom(bytes, 0)
+	_, err = n.DecodeFrom(bytes, 0)
+	return err
 }
 
 // Implements AmfType.DecodeFrom
-func (n *Number) DecodeFrom(slice []byte, pos int) error {
+func (n *Number) DecodeFrom(slice []byte, pos int) (int, error) {
 	if pos+7 >= len(slice) {
-		return io.EOF
+		return 0, io.EOF
 	}
 
 	bytes := getUint64(slice, pos)
 	n.encoded = slice[0:7]
 	n.num = math.Float64frombits(bytes)
-	return nil
+	return 8, nil
 }
 
 // Gets the contained number

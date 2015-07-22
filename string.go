@@ -32,21 +32,21 @@ func (s *baseString) Decode(r io.Reader) error {
 }
 
 // Implements AmfType.DecodeFrom
-func (s *baseString) DecodeFrom(slice []byte, pos int) error {
+func (s *baseString) DecodeFrom(slice []byte, pos int) (int, error) {
 	if len(slice)-pos < s.sizeLen {
-		return io.EOF
+		return 0, io.EOF
 	}
 
 	size := int(getVarUint(slice, pos, s.sizeLen))
 	total := size + s.sizeLen
 	if len(slice)-pos < total {
-		return io.EOF
+		return 0, io.EOF
 	}
 
 	s.encoded = slice[pos : pos+total]
 	s.body = string(slice[pos+s.sizeLen : pos+total])
 
-	return nil
+	return total, nil
 }
 
 // Returns the string content of this type.

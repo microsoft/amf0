@@ -25,8 +25,9 @@ func TestStringDecodes(t *testing.T) {
 	assert.Equal(t, "こんにちは", o.GetBody())
 
 	o = NewString()
-	err = o.DecodeFrom(append([]byte{0, 1, 2, 3}, bytes...), 4)
+	n, err := o.DecodeFrom(append([]byte{0, 1, 2, 3}, bytes...), 4)
 	assert.Nil(t, err)
+	assert.Equal(t, 17, n)
 	assert.Equal(t, "こんにちは", o.GetBody())
 }
 
@@ -88,8 +89,9 @@ func TestLongStringDecodes(t *testing.T) {
 	assert.Equal(t, "こんにちは", o.GetBody())
 
 	o = NewLongString()
-	err = o.DecodeFrom(append([]byte{0, 1, 2, 3}, bytes...), 4)
+	n, err := o.DecodeFrom(append([]byte{0, 1, 2, 3}, bytes...), 4)
 	assert.Nil(t, err)
+	assert.Equal(t, 19, n)
 	assert.Equal(t, "こんにちは", o.GetBody())
 }
 
