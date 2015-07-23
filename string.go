@@ -20,13 +20,12 @@ func (s *baseString) Decode(r io.Reader) error {
 	}
 
 	size := int(getVarUint(sizeBytes, 0, s.sizeLen))
-	s.encoded = make([]byte, s.sizeLen+size)
-	if err := readBytesTo(r, size, s.encoded, s.sizeLen); err != nil {
-		return err
+	body, err := readBytes(r, size)
+	if err != nil {
+		return nil
 	}
 
-	copy(s.encoded, sizeBytes)
-	s.body = string(s.encoded[s.sizeLen:])
+	s.encoded = append(sizeBytes, body...)
 
 	return nil
 }
@@ -44,13 +43,23 @@ func (s *baseString) DecodeFrom(slice []byte, pos int) (int, error) {
 	}
 
 	s.encoded = slice[pos : pos+total]
-	s.body = string(slice[pos+s.sizeLen : pos+total])
 
 	return total, nil
 }
 
+// Gets the contents of this message as a byte slice.
+func (s *baseString) GetBytes() []byte {
+	return s.encoded[s.sizeLen:]
+}
+
 // Returns the string content of this type.
 func (s *baseString) GetBody() string {
+	// The body is decoded lazily, since utf
+	// decoding is relatively expensive.
+	if s.body == "" {
+		s.body = string(s.GetBytes())
+	}
+
 	return s.body
 }
 
