@@ -62,4 +62,7 @@ var table = [...]factory{
 	MARKER_LONG_STRING: func() AmfType {
 		return NewLongString()
 	},
+	MARKER_OBJECT: func() AmfType {
+		return NewObject()
+	},
 }
