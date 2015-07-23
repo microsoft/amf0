@@ -65,4 +65,7 @@ var table = [...]factory{
 	MARKER_OBJECT: func() AmfType {
 		return NewObject()
 	},
+	MARKER_NULL: func() AmfType {
+		return NewNull()
+	},
 }
