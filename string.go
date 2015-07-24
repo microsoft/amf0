@@ -7,7 +7,7 @@ import (
 // Base string is a variable-length string container used for
 // both String and Long String types
 type baseString struct {
-	encoded []byte
+	bytes   []byte
 	body    string
 	sizeLen int
 }
@@ -20,12 +20,10 @@ func (s *baseString) Decode(r io.Reader) error {
 	}
 
 	size := int(getVarUint(sizeBytes, 0, s.sizeLen))
-	body, err := readBytes(r, size)
+	s.bytes, err = readBytes(r, size)
 	if err != nil {
 		return nil
 	}
-
-	s.encoded = append(sizeBytes, body...)
 
 	return nil
 }
@@ -42,14 +40,14 @@ func (s *baseString) DecodeFrom(slice []byte, pos int) (int, error) {
 		return 0, io.EOF
 	}
 
-	s.encoded = slice[pos : pos+total]
+	s.bytes = slice[pos+s.sizeLen : pos+total]
 
 	return total, nil
 }
 
 // Gets the contents of this message as a byte slice.
 func (s *baseString) GetBytes() []byte {
-	return s.encoded[s.sizeLen:]
+	return s.bytes
 }
 
 // Returns the string content of this type.
@@ -57,7 +55,7 @@ func (s *baseString) GetBody() string {
 	// The body is decoded lazily, since utf
 	// decoding is relatively expensive.
 	if s.body == "" {
-		s.body = string(s.GetBytes())
+		s.body = string(s.bytes)
 	}
 
 	return s.body
@@ -66,28 +64,26 @@ func (s *baseString) GetBody() string {
 // Sets the trying content of this type.
 func (s *baseString) SetBody(str string) {
 	s.body = str
-
-	bytes := []byte(str)
-	l := len(bytes)
-
-	s.encoded = make([]byte, l+s.sizeLen)
-	putVarUint(s.encoded, 0, uint64(l), s.sizeLen)
-	copy(s.encoded[s.sizeLen:], bytes)
+	s.bytes = []byte(str)
 }
 
 // Implements AmfType.Encode
 func (s *baseString) Encode(w io.Writer) (int, error) {
-	return w.Write(s.encoded)
+	return w.Write(s.EncodeBytes())
 }
 
 // Implements AmfType.EncodeTo
 func (s *baseString) EncodeTo(slice []byte, pos int) {
-	copy(slice[pos:], s.encoded)
+	copy(slice[pos:], s.EncodeBytes())
 }
 
 // Implements AmfType.EncodeBytes
 func (s *baseString) EncodeBytes() []byte {
-	return s.encoded
+	bytes := make([]byte, 1+s.sizeLen+len(s.bytes))
+	bytes[0] = MARKER_STRING
+	putVarUint(bytes, 1, uint64(len(s.bytes)), s.sizeLen)
+	copy(bytes[1+s.sizeLen:], s.bytes)
+	return bytes
 }
 
 type String struct{ *baseString }

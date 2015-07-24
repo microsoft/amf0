@@ -10,10 +10,7 @@ func getEncoded() []byte {
 	s.SetBody("こんにちは")
 	n := NewNumber()
 	n.SetNumber(42)
-	bytes := append([]byte{MARKER_STRING}, s.EncodeBytes()...)
-	bytes = append(bytes, MARKER_NUMBER)
-	bytes = append(bytes, n.EncodeBytes()...)
-	return bytes
+	return append(s.EncodeBytes(), n.EncodeBytes()...)
 }
 
 func TestDecoderComplete(t *testing.T) {

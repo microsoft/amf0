@@ -6,8 +6,7 @@ import (
 )
 
 type Number struct {
-	encoded []byte
-	num     float64
+	num float64
 }
 
 var _ AmfType = &Number{}
@@ -40,7 +39,6 @@ func (n *Number) DecodeFrom(slice []byte, pos int) (int, error) {
 	}
 
 	bytes := getUint64(slice, pos)
-	n.encoded = slice[0:7]
 	n.num = math.Float64frombits(bytes)
 	return 8, nil
 }
@@ -52,28 +50,27 @@ func (n *Number) GetNumber() float64 {
 
 // Sets the contained number.
 func (n *Number) SetNumber(num float64) {
-	bytes := math.Float64bits(num)
-	if n.encoded == nil {
-		n.encoded = make([]byte, 8)
-	}
-
-	putUint64(n.encoded, 0, bytes)
 	n.num = num
 }
 
 // Implements AmfType.Encode
 func (n *Number) Encode(w io.Writer) (int, error) {
-	return w.Write(n.encoded)
+	return w.Write(n.EncodeBytes())
 }
 
 // Implements AmfType.EncodeTo
 func (n *Number) EncodeTo(slice []byte, pos int) {
-	copy(slice[pos:], n.encoded)
+	copy(slice[pos:], n.EncodeBytes())
 }
 
 // Implements AmfType.EncodeBytes
 func (n *Number) EncodeBytes() []byte {
-	return n.encoded
+	bytes := make([]byte, 9)
+
+	bytes[0] = MARKER_NUMBER
+	putUint64(bytes, 1, math.Float64bits(n.num))
+
+	return bytes
 }
 
 // Implements AmfType.Marker

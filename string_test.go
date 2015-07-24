@@ -8,16 +8,18 @@ import (
 func TestStringBuildsAndEncodes(t *testing.T) {
 	s := NewString()
 	s.SetBody("hello")
-	assert.Equal(t, []byte{0x0, 0x5, 0x68, 0x65, 0x6C, 0x6C, 0x6F}, s.EncodeBytes())
+	assert.Equal(t, []byte{MARKER_STRING, 0x0, 0x5, 0x68, 0x65, 0x6C,
+		0x6C, 0x6F}, s.EncodeBytes())
 	s.SetBody("こんにちは")
-	assert.Equal(t, []byte{0x0, 0xf, 0xe3, 0x81, 0x93, 0xe3, 0x82,
-		0x93, 0xe3, 0x81, 0xab, 0xe3, 0x81, 0xa1, 0xe3, 0x81, 0xaf}, s.EncodeBytes())
+	assert.Equal(t, []byte{MARKER_STRING, 0x0, 0xf, 0xe3, 0x81, 0x93,
+		0xe3, 0x82, 0x93, 0xe3, 0x81, 0xab, 0xe3, 0x81, 0xa1, 0xe3,
+		0x81, 0xaf}, s.EncodeBytes())
 }
 
 func TestStringDecodes(t *testing.T) {
 	s := NewString()
 	s.SetBody("こんにちは")
-	bytes := s.EncodeBytes()
+	bytes := s.EncodeBytes()[1:]
 
 	o := NewString()
 	err := o.Decode(&reluctantReader{src: bytes})
@@ -45,14 +47,14 @@ func bounceString(str string) string {
 	in := NewString()
 	in.SetBody(str)
 	out := NewString()
-	out.DecodeFrom(in.EncodeBytes(), 0)
+	out.DecodeFrom(in.EncodeBytes()[1:], 0)
 	return out.GetBody()
 }
 
 func BenchmarkStringDecode(b *testing.B) {
 	in := NewString()
 	in.SetBody("hello")
-	bytes := in.EncodeBytes()
+	bytes := in.EncodeBytes()[1:]
 	out := NewString()
 
 	for i := 0; i < b.N; i++ {
@@ -72,16 +74,18 @@ func BenchmarkStringEncode(b *testing.B) {
 func TestLongStringBuildsAndEncodes(t *testing.T) {
 	s := NewLongString()
 	s.SetBody("hello")
-	assert.Equal(t, []byte{0x0, 0x0, 0x0, 0x5, 0x68, 0x65, 0x6C, 0x6C, 0x6F}, s.EncodeBytes())
+	assert.Equal(t, []byte{MARKER_STRING, 0x0, 0x0, 0x0, 0x5, 0x68,
+		0x65, 0x6C, 0x6C, 0x6F}, s.EncodeBytes())
 	s.SetBody("こんにちは")
-	assert.Equal(t, []byte{0x0, 0x0, 0x0, 0xf, 0xe3, 0x81, 0x93, 0xe3, 0x82,
-		0x93, 0xe3, 0x81, 0xab, 0xe3, 0x81, 0xa1, 0xe3, 0x81, 0xaf}, s.EncodeBytes())
+	assert.Equal(t, []byte{MARKER_STRING, 0x0, 0x0, 0x0, 0xf, 0xe3,
+		0x81, 0x93, 0xe3, 0x82, 0x93, 0xe3, 0x81, 0xab, 0xe3, 0x81,
+		0xa1, 0xe3, 0x81, 0xaf}, s.EncodeBytes())
 }
 
 func TestLongStringDecodes(t *testing.T) {
 	s := NewLongString()
 	s.SetBody("こんにちは")
-	bytes := s.EncodeBytes()
+	bytes := s.EncodeBytes()[1:]
 
 	o := NewLongString()
 	err := o.Decode(&reluctantReader{src: bytes})
@@ -98,7 +102,7 @@ func TestLongStringDecodes(t *testing.T) {
 func BenchmarkLongStringDecode(b *testing.B) {
 	in := NewLongString()
 	in.SetBody("hello")
-	bytes := in.EncodeBytes()
+	bytes := in.EncodeBytes()[1:]
 	out := NewLongString()
 
 	for i := 0; i < b.N; i++ {

@@ -58,20 +58,19 @@ func (n *Boolean) Encode(w io.Writer) (int, error) {
 
 // Implements AmfType.EncodeTo
 func (n *Boolean) EncodeTo(slice []byte, pos int) {
+	slice[pos] = MARKER_BOOLEAN
 	if n.isTrue {
-		slice[pos] = 1
+		slice[pos+1] = 1
 	} else {
-		slice[pos] = 0
+		slice[pos+1] = 0
 	}
 }
 
 // Implements AmfType.EncodeBytes
 func (n *Boolean) EncodeBytes() []byte {
-	if n.isTrue {
-		return []byte{1}
-	} else {
-		return []byte{0}
-	}
+	bytes := make([]byte, 2)
+	n.EncodeTo(bytes, 0)
+	return bytes
 }
 
 // Implements AmfType.Marker

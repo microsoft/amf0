@@ -8,7 +8,7 @@ import (
 
 func TestNullBuildsAndEncodes(t *testing.T) {
 	s := NewNull()
-	assert.Equal(t, make([]byte, 0), s.EncodeBytes())
+	assert.Equal(t, []byte{MARKER_NULL}, s.EncodeBytes())
 }
 
 func TestNullDecodes(t *testing.T) {

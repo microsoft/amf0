@@ -8,9 +8,9 @@ import (
 func TestBooleanBuildsAndEncodes(t *testing.T) {
 	s := NewBoolean()
 	s.Set(true)
-	assert.Equal(t, []byte{1}, s.EncodeBytes())
+	assert.Equal(t, []byte{MARKER_BOOLEAN, 1}, s.EncodeBytes())
 	s.Set(false)
-	assert.Equal(t, []byte{0}, s.EncodeBytes())
+	assert.Equal(t, []byte{MARKER_BOOLEAN, 0}, s.EncodeBytes())
 }
 
 func TestBooleanDecodes(t *testing.T) {

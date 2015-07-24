@@ -43,7 +43,8 @@ func TestObjectBuildsAndEncodes(t *testing.T) {
 		Add("swfUrl", NewString("rtmp://localhost/myapp")).
 		Add("tcUrl", NewString("rtmp://localhost/myapp"))
 
-	assert.Equal(t, s.EncodeBytes(), objTestData)
+	assert.Equal(t, s.EncodeBytes(), append(
+		[]byte{MARKER_OBJECT}, objTestData...))
 }
 
 func BenchmarkObjectDecode(b *testing.B) {
