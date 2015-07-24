@@ -62,8 +62,8 @@ func (n *Number) SetNumber(num float64) {
 }
 
 // Implements AmfType.Encode
-func (n *Number) Encode(w io.Writer) {
-	w.Write(n.encoded)
+func (n *Number) Encode(w io.Writer) (int, error) {
+	return w.Write(n.encoded)
 }
 
 // Implements AmfType.EncodeTo
@@ -76,6 +76,7 @@ func (n *Number) EncodeBytes() []byte {
 	return n.encoded
 }
 
+// Implements AmfType.Marker
 func (n *Number) Marker() byte {
 	return MARKER_NUMBER
 }

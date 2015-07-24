@@ -23,7 +23,8 @@ func (n *NullType) DecodeFrom(slice []byte, pos int) (int, error) {
 }
 
 // Encode implements AmfType.Encode
-func (n *NullType) Encode(w io.Writer) {
+func (n *NullType) Encode(w io.Writer) (int, error) {
+	return 0, nil
 }
 
 // EncodeTo implements AmfType.EncodeTo
@@ -35,6 +36,7 @@ func (n *NullType) EncodeBytes() []byte {
 	return make([]byte, 0)
 }
 
+// Implements AmfType.Marker
 func (n *NullType) Marker() byte {
 	return MARKER_NULL
 }

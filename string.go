@@ -76,8 +76,8 @@ func (s *baseString) SetBody(str string) {
 }
 
 // Implements AmfType.Encode
-func (s *baseString) Encode(w io.Writer) {
-	w.Write(s.encoded)
+func (s *baseString) Encode(w io.Writer) (int, error) {
+	return w.Write(s.encoded)
 }
 
 // Implements AmfType.EncodeTo
@@ -116,10 +116,12 @@ func NewLongString(str ...string) *LongString {
 	return s
 }
 
+// Implements AmfType.Marker
 func (s *String) Marker() byte {
 	return MARKER_STRING
 }
 
+// Implements AmfType.Marker
 func (s *LongString) Marker() byte {
 	return MARKER_LONG_STRING
 }

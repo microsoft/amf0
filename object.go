@@ -196,8 +196,8 @@ func (o *Object) Size() int {
 }
 
 // Implements AmfType.Encode
-func (o *Object) Encode(w io.Writer) {
-	w.Write(o.EncodeBytes())
+func (o *Object) Encode(w io.Writer) (int, error) {
+	return w.Write(o.EncodeBytes())
 }
 
 // Implements AmfType.EncodeTo
@@ -214,6 +214,7 @@ func (o *Object) EncodeBytes() []byte {
 	return o.encoded
 }
 
+// Implements AmfType.Marker
 func (o *Object) Marker() byte {
 	return MARKER_OBJECT
 }

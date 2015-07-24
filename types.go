@@ -17,8 +17,9 @@ type AmfType interface {
 	// byte _after_ the type marker. Returns the number of bytes
 	// consumed, or an error.
 	DecodeFrom(slice []byte, pos int) (int, error)
-	// Encodes and writes the type to the reader.
-	Encode(io.Writer)
+	// Encodes and writes the type to the reader. Returns an error
+	// if one occurred on the reader.
+	Encode(io.Writer) (int, error)
 	// Encodes and writes the type to the position in the slice.
 	EncodeTo(slice []byte, pos int)
 	// Encodes and returns a byte slice representing the type.

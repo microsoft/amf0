@@ -52,8 +52,8 @@ func (n *Boolean) Set(isTrue bool) {
 }
 
 // Implements AmfType.Encode
-func (n *Boolean) Encode(w io.Writer) {
-	w.Write(n.EncodeBytes())
+func (n *Boolean) Encode(w io.Writer) (int, error) {
+	return w.Write(n.EncodeBytes())
 }
 
 // Implements AmfType.EncodeTo
@@ -74,6 +74,7 @@ func (n *Boolean) EncodeBytes() []byte {
 	}
 }
 
+// Implements AmfType.Marker
 func (b *Boolean) Marker() byte {
 	return MARKER_BOOLEAN
 }
