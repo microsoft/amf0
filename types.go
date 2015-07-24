@@ -23,6 +23,8 @@ type AmfType interface {
 	EncodeTo(slice []byte, pos int)
 	// Encodes and returns a byte slice representing the type.
 	EncodeBytes() []byte
+	// Gets the associated marker byte for the type.
+	Marker() byte
 }
 
 const (

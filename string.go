@@ -96,10 +96,30 @@ type LongString struct{ *baseString }
 var _ AmfType = &String{}
 var _ AmfType = &LongString{}
 
-func NewString() *String {
-	return &String{&baseString{sizeLen: 2}}
+// Creates a new string type, with an optional initial content.
+func NewString(str ...string) *String {
+	s := &String{&baseString{sizeLen: 2}}
+	if len(str) == 1 {
+		s.SetBody(str[0])
+	}
+
+	return s
 }
 
-func NewLongString() *LongString {
-	return &LongString{&baseString{sizeLen: 4}}
+// Creates a new long string type, with an optional initial content.
+func NewLongString(str ...string) *LongString {
+	s := &LongString{&baseString{sizeLen: 4}}
+	if len(str) == 1 {
+		s.SetBody(str[0])
+	}
+
+	return s
+}
+
+func (s *String) Marker() byte {
+	return MARKER_STRING
+}
+
+func (s *LongString) Marker() byte {
+	return MARKER_LONG_STRING
 }

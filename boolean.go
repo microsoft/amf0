@@ -67,3 +67,7 @@ func (n *Boolean) EncodeBytes() []byte {
 		return []byte{0}
 	}
 }
+
+func (b *Boolean) Marker() byte {
+	return MARKER_BOOLEAN
+}

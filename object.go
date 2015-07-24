@@ -8,11 +8,12 @@ import (
 
 type Object struct {
 	// object pairs are ordered, so we're not using a map.
-	pairs   []*ObjectPair
-	encoded []byte
+	pairs    []*objectPair
+	encoded  []byte
+	uptodate bool
 }
 
-type ObjectPair struct {
+type objectPair struct {
 	Key   []byte
 	Value AmfType
 }
@@ -21,6 +22,13 @@ var _ AmfType = &Object{}
 
 func NewObject() *Object {
 	return &Object{}
+}
+
+func newPair(key string, value AmfType) *objectPair {
+	return &objectPair{
+		Key:   []byte(key),
+		Value: value,
+	}
 }
 
 // This error is returned when trying to get a key that doesn't exist.
@@ -32,7 +40,7 @@ var WrongTypeError = errors.New("Item not found in the object.")
 
 // Implements AmfType.Decode
 func (o *Object) Decode(r io.Reader) error {
-	var pairs []*ObjectPair
+	var pairs []*objectPair
 	buf := make([]byte, 0)
 	str := NewString()
 	for {
@@ -51,7 +59,7 @@ func (o *Object) Decode(r io.Reader) error {
 			return err
 		}
 
-		pairs = append(pairs, &ObjectPair{Key: key, Value: value})
+		pairs = append(pairs, &objectPair{Key: key, Value: value})
 
 		buf = append(buf, key...)
 		buf = append(buf, value.EncodeBytes()...)
@@ -59,12 +67,13 @@ func (o *Object) Decode(r io.Reader) error {
 
 	o.pairs = pairs
 	o.encoded = buf
+	o.uptodate = true
 	return nil
 }
 
 // Implements AmfType.DecodeFrom
 func (o *Object) DecodeFrom(slice []byte, pos int) (int, error) {
-	var pairs []*ObjectPair
+	var pairs []*objectPair
 	str := NewString()
 	start := pos
 	for {
@@ -86,11 +95,12 @@ func (o *Object) DecodeFrom(slice []byte, pos int) (int, error) {
 		}
 
 		pos += n
-		pairs = append(pairs, &ObjectPair{Key: key, Value: value})
+		pairs = append(pairs, &objectPair{Key: key, Value: value})
 	}
 
 	o.pairs = pairs
 	o.encoded = slice[start:pos]
+	o.uptodate = true
 	return pos - start, nil
 }
 
@@ -154,6 +164,32 @@ func (o *Object) Get(key string) (AmfType, error) {
 	return nil, NotFoundError
 }
 
+func (o *Object) makeEncoded() {
+	// todo: see if calculating, allocating, and writing to a
+	// single slice is more efficient.
+
+	buf := new(bytes.Buffer)
+	keylen := make([]byte, 2)
+	for _, pair := range o.pairs {
+		putUint16(keylen, 0, uint16(len(pair.Key)))
+		buf.Write(keylen)
+		buf.Write(pair.Key)
+		buf.Write([]byte{pair.Value.Marker()})
+		pair.Value.Encode(buf)
+	}
+
+	buf.Write([]byte{0x00, 0x00, MARKER_OBJECT_END})
+	o.encoded = buf.Bytes()
+	o.uptodate = true
+}
+
+// Adds a new pair to the object.
+func (o *Object) Add(key string, value AmfType) *Object {
+	o.pairs = append(o.pairs, newPair(key, value))
+	o.uptodate = false
+	return o
+}
+
 // Returns the number of kv pairs in the object.
 func (o *Object) Size() int {
 	return len(o.pairs)
@@ -161,15 +197,23 @@ func (o *Object) Size() int {
 
 // Implements AmfType.Encode
 func (o *Object) Encode(w io.Writer) {
-	w.Write(o.encoded)
+	w.Write(o.EncodeBytes())
 }
 
 // Implements AmfType.EncodeTo
 func (o *Object) EncodeTo(slice []byte, pos int) {
-	copy(slice[pos:], o.encoded)
+	copy(slice[pos:], o.EncodeBytes())
 }
 
 // Implements AmfType.EncodeBytes
 func (o *Object) EncodeBytes() []byte {
+	if !o.uptodate {
+		o.makeEncoded()
+	}
+
 	return o.encoded
+}
+
+func (o *Object) Marker() byte {
+	return MARKER_OBJECT
 }

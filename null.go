@@ -34,3 +34,7 @@ func (n *NullType) EncodeTo(slice []byte, pos int) {
 func (n *NullType) EncodeBytes() []byte {
 	return make([]byte, 0)
 }
+
+func (n *NullType) Marker() byte {
+	return MARKER_NULL
+}

@@ -69,3 +69,7 @@ func (n *Number) EncodeTo(slice []byte, pos int) {
 func (n *Number) EncodeBytes() []byte {
 	return n.encoded
 }
+
+func (n *Number) Marker() byte {
+	return MARKER_NUMBER
+}
