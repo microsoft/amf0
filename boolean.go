@@ -5,7 +5,7 @@ import (
 )
 
 type Boolean struct {
-	isTrue bool
+	isTrue byte
 }
 
 var _ AmfType = &Boolean{}
@@ -27,7 +27,7 @@ func (n *Boolean) Decode(r io.Reader) error {
 		return err
 	}
 
-	n.isTrue = bytes[0] > 0
+	n.isTrue = bytes[0]
 	return nil
 }
 
@@ -37,18 +37,22 @@ func (n *Boolean) DecodeFrom(slice []byte, pos int) (int, error) {
 		return 0, io.EOF
 	}
 
-	n.isTrue = slice[0] > 0
+	n.isTrue = slice[0]
 	return 1, nil
 }
 
 // Gets the contained boolean
 func (n *Boolean) True() bool {
-	return n.isTrue
+	return n.isTrue > 0
 }
 
 // Sets the contained boolean.
 func (n *Boolean) Set(isTrue bool) {
-	n.isTrue = isTrue
+	if isTrue {
+		n.isTrue = 1
+	} else {
+		n.isTrue = 0
+	}
 }
 
 // Implements AmfType.Encode
@@ -59,18 +63,12 @@ func (n *Boolean) Encode(w io.Writer) (int, error) {
 // Implements AmfType.EncodeTo
 func (n *Boolean) EncodeTo(slice []byte, pos int) {
 	slice[pos] = MARKER_BOOLEAN
-	if n.isTrue {
-		slice[pos+1] = 1
-	} else {
-		slice[pos+1] = 0
-	}
+	slice[pos+1] = n.isTrue
 }
 
 // Implements AmfType.EncodeBytes
 func (n *Boolean) EncodeBytes() []byte {
-	bytes := make([]byte, 2)
-	n.EncodeTo(bytes, 0)
-	return bytes
+	return []byte{MARKER_BOOLEAN, n.isTrue}
 }
 
 // Implements AmfType.Marker
