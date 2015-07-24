@@ -10,8 +10,14 @@ type Boolean struct {
 
 var _ AmfType = &Boolean{}
 
-func NewBoolean() *Boolean {
-	return &Boolean{}
+// Creates a new Boolean type, with an optional initial value.
+func NewBoolean(bol ...bool) *Boolean {
+	b := &Boolean{}
+	if len(bol) == 1 {
+		b.Set(bol[0])
+	}
+
+	return b
 }
 
 // Implements AmfType.Decode

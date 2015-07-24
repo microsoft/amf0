@@ -12,8 +12,14 @@ type Number struct {
 
 var _ AmfType = &Number{}
 
-func NewNumber() *Number {
-	return &Number{}
+// Creates a new Number type, with an optional initial value.
+func NewNumber(num ...float64) *Number {
+	n := &Number{}
+	if len(num) == 1 {
+		n.SetNumber(num[0])
+	}
+
+	return n
 }
 
 // Implements AmfType.Decode
