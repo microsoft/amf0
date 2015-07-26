@@ -21,23 +21,6 @@ func Decode(r io.Reader) (AmfType, error) {
 	return packet, packet.Decode(r)
 }
 
-// Returns a packet decoded from the position in the byte string.
-// Returns the decoded type and the number of bytes consumed.
-func DecodeFrom(b []byte, pos int) (AmfType, int, error) {
-	l := len(b)
-	if pos >= l {
-		return nil, 0, io.EOF
-	}
-
-	packet, err := Identify(b[pos])
-	if err != nil {
-		return nil, 0, err
-	}
-
-	n, err := packet.DecodeFrom(b, pos+1)
-	return packet, n + 1, err
-}
-
 // Identifies the packet type given by `b`, returning a new
 // AmfType if recognized, or error otherwise.
 func Identify(b byte) (AmfType, error) {

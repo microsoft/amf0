@@ -31,16 +31,6 @@ func (n *Boolean) Decode(r io.Reader) error {
 	return nil
 }
 
-// Implements AmfType.DecodeFrom
-func (n *Boolean) DecodeFrom(slice []byte, pos int) (int, error) {
-	if len(slice) == 0 {
-		return 0, io.EOF
-	}
-
-	n.isTrue = slice[0]
-	return 1, nil
-}
-
 // Gets the contained boolean
 func (n *Boolean) True() bool {
 	return n.isTrue > 0
@@ -58,12 +48,6 @@ func (n *Boolean) Set(isTrue bool) {
 // Implements AmfType.Encode
 func (n *Boolean) Encode(w io.Writer) (int, error) {
 	return w.Write(n.EncodeBytes())
-}
-
-// Implements AmfType.EncodeTo
-func (n *Boolean) EncodeTo(slice []byte, pos int) {
-	slice[pos] = MARKER_BOOLEAN
-	slice[pos+1] = n.isTrue
 }
 
 // Implements AmfType.EncodeBytes

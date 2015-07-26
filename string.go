@@ -28,23 +28,6 @@ func (s *baseString) Decode(r io.Reader) error {
 	return nil
 }
 
-// Implements AmfType.DecodeFrom
-func (s *baseString) DecodeFrom(slice []byte, pos int) (int, error) {
-	if len(slice)-pos < s.sizeLen {
-		return 0, io.EOF
-	}
-
-	size := int(getVarUint(slice, pos, s.sizeLen))
-	total := size + s.sizeLen
-	if len(slice)-pos < total {
-		return 0, io.EOF
-	}
-
-	s.bytes = slice[pos+s.sizeLen : pos+total]
-
-	return total, nil
-}
-
 // Gets the contents of this message as a byte slice.
 func (s *baseString) GetBytes() []byte {
 	return s.bytes
@@ -70,11 +53,6 @@ func (s *baseString) SetBody(str string) {
 // Implements AmfType.Encode
 func (s *baseString) Encode(w io.Writer) (int, error) {
 	return w.Write(s.EncodeBytes())
-}
-
-// Implements AmfType.EncodeTo
-func (s *baseString) EncodeTo(slice []byte, pos int) {
-	copy(slice[pos:], s.EncodeBytes())
 }
 
 // Implements AmfType.EncodeBytes

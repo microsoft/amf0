@@ -1,6 +1,7 @@
 package amf0
 
 import (
+	"bytes"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -27,23 +28,12 @@ func TestDecoderComplete(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestDecodeFrom(t *testing.T) {
-	bytes := getEncoded()
-
-	kind, n, err := DecodeFrom(bytes, 0)
-	assert.Nil(t, err)
-	assert.Equal(t, "こんにちは", kind.(*String).GetBody())
-	kind, n, err = DecodeFrom(bytes, n)
-	assert.Nil(t, err)
-	assert.Equal(t, float64(42), kind.(*Number).GetNumber())
-}
-
 func BenchmarkDecoder(b *testing.B) {
 	s := NewBoolean()
 	s.Set(true)
-	bytes := append([]byte{MARKER_BOOLEAN}, s.EncodeBytes()...)
+	data := s.EncodeBytes()
 
 	for i := 0; i < b.N; i++ {
-		DecodeFrom(bytes, 0)
+		Decode(bytes.NewReader(data))
 	}
 }

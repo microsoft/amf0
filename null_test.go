@@ -1,6 +1,7 @@
 package amf0
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -20,11 +21,10 @@ func TestNullDecodes(t *testing.T) {
 }
 
 func BenchmarkNullDecode(b *testing.B) {
-	bytes := []byte{}
 	out := NewNull()
 
 	for i := 0; i < b.N; i++ {
-		out.DecodeFrom(bytes, 0)
+		out.Decode(bytes.NewReader([]byte{}))
 	}
 }
 

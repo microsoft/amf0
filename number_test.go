@@ -1,6 +1,7 @@
 package amf0
 
 import (
+	"bytes"
 	"encoding/binary"
 	"github.com/stretchr/testify/assert"
 	"math"
@@ -23,28 +24,22 @@ func TestNumberBuildsAndEncodes(t *testing.T) {
 func TestNumberDecodes(t *testing.T) {
 	s := NewNumber()
 	s.SetNumber(0x4242)
-	bytes := s.EncodeBytes()
+	data := s.EncodeBytes()[1:]
 
 	o := NewNumber()
-	err := o.Decode(&reluctantReader{src: bytes[1:]})
+	err := o.Decode(bytes.NewReader(data))
 	assert.Nil(t, err)
-	assert.Equal(t, float64(0x4242), o.GetNumber())
-
-	o = NewNumber()
-	n, err := o.DecodeFrom(bytes[1:], 0)
-	assert.Nil(t, err)
-	assert.Equal(t, 8, n)
 	assert.Equal(t, float64(0x4242), o.GetNumber())
 }
 
 func BenchmarkNumberDecode(b *testing.B) {
 	in := NewNumber()
 	in.SetNumber(0x4242)
-	bytes := in.EncodeBytes()[1:]
+	data := in.EncodeBytes()[1:]
 	out := NewNumber()
 
 	for i := 0; i < b.N; i++ {
-		out.DecodeFrom(bytes, 0)
+		out.Decode(bytes.NewReader(data))
 	}
 }
 

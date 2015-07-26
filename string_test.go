@@ -1,6 +1,7 @@
 package amf0
 
 import (
+	"bytes"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -25,12 +26,6 @@ func TestStringDecodes(t *testing.T) {
 	err := o.Decode(&reluctantReader{src: bytes})
 	assert.Nil(t, err)
 	assert.Equal(t, "こんにちは", o.GetBody())
-
-	o = NewString()
-	n, err := o.DecodeFrom(append([]byte{0, 1, 2, 3}, bytes...), 4)
-	assert.Nil(t, err)
-	assert.Equal(t, 17, n)
-	assert.Equal(t, "こんにちは", o.GetBody())
 }
 
 func TestStringBounces(t *testing.T) {
@@ -47,18 +42,18 @@ func bounceString(str string) string {
 	in := NewString()
 	in.SetBody(str)
 	out := NewString()
-	out.DecodeFrom(in.EncodeBytes()[1:], 0)
+	out.Decode(bytes.NewReader(in.EncodeBytes()[1:]))
 	return out.GetBody()
 }
 
 func BenchmarkStringDecode(b *testing.B) {
 	in := NewString()
 	in.SetBody("hello")
-	bytes := in.EncodeBytes()[1:]
+	data := in.EncodeBytes()[1:]
 	out := NewString()
 
 	for i := 0; i < b.N; i++ {
-		out.DecodeFrom(bytes, 0)
+		out.Decode(bytes.NewReader(data))
 	}
 }
 
@@ -91,22 +86,16 @@ func TestLongStringDecodes(t *testing.T) {
 	err := o.Decode(&reluctantReader{src: bytes})
 	assert.Nil(t, err)
 	assert.Equal(t, "こんにちは", o.GetBody())
-
-	o = NewLongString()
-	n, err := o.DecodeFrom(append([]byte{0, 1, 2, 3}, bytes...), 4)
-	assert.Nil(t, err)
-	assert.Equal(t, 19, n)
-	assert.Equal(t, "こんにちは", o.GetBody())
 }
 
 func BenchmarkLongStringDecode(b *testing.B) {
 	in := NewLongString()
 	in.SetBody("hello")
-	bytes := in.EncodeBytes()[1:]
+	data := in.EncodeBytes()[1:]
 	out := NewLongString()
 
 	for i := 0; i < b.N; i++ {
-		out.DecodeFrom(bytes, 0)
+		out.Decode(bytes.NewReader(data))
 	}
 }
 

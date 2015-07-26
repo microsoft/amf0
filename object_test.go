@@ -1,6 +1,7 @@
 package amf0
 
 import (
+	"bytes"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -18,9 +19,8 @@ var objTestData = []byte{0, 3, 97, 112, 112, 2, 0, 5, 109,
 
 func TestObjectDecodes(t *testing.T) {
 	o := NewObject()
-	n, err := o.DecodeFrom(objTestData, 0)
+	err := o.Decode(&reluctantReader{src: objTestData})
 
-	assert.Equal(t, len(objTestData), n)
 	assert.Nil(t, err)
 	assert.Equal(t, 5, o.Size())
 
@@ -51,13 +51,13 @@ func BenchmarkObjectDecode(b *testing.B) {
 	out := NewObject()
 
 	for i := 0; i < b.N; i++ {
-		out.DecodeFrom(objTestData, 0)
+		out.Decode(bytes.NewReader(objTestData))
 	}
 }
 
 func BenchmarkObjectLookup(b *testing.B) {
 	out := NewObject()
-	out.DecodeFrom(objTestData, 0)
+	out.Decode(bytes.NewReader(objTestData))
 
 	for i := 0; i < b.N; i++ {
 		out.String("app")

@@ -1,6 +1,7 @@
 package amf0
 
 import (
+	"bytes"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -20,20 +21,14 @@ func TestBooleanDecodes(t *testing.T) {
 	err := o.Decode(&reluctantReader{src: bytes})
 	assert.Nil(t, err)
 	assert.True(t, o.True())
-
-	o = NewBoolean()
-	n, err := o.DecodeFrom(bytes, 0)
-	assert.Nil(t, err)
-	assert.Equal(t, 1, n)
-	assert.True(t, o.True())
 }
 
 func BenchmarkBooleanDecode(b *testing.B) {
-	bytes := []byte{0}
+	data := []byte{0}
 	out := NewBoolean()
 
 	for i := 0; i < b.N; i++ {
-		out.DecodeFrom(bytes, 0)
+		out.Decode(bytes.NewReader(data))
 	}
 }
 

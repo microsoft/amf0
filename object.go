@@ -64,37 +64,6 @@ func (o *Object) Decode(r io.Reader) error {
 	return nil
 }
 
-// Implements AmfType.DecodeFrom
-func (o *Object) DecodeFrom(slice []byte, pos int) (int, error) {
-	var pairs []*objectPair
-	str := NewString()
-	start := pos
-	for {
-		n, err := str.DecodeFrom(slice, pos)
-		if err != nil {
-			return 0, err
-		}
-
-		key := str.GetBytes()
-		pos += n
-		if len(key) == 0 {
-			pos++
-			break
-		}
-
-		value, n, err := DecodeFrom(slice, pos)
-		if err != nil {
-			return 0, err
-		}
-
-		pos += n
-		pairs = append(pairs, &objectPair{Key: key, Value: value})
-	}
-
-	o.pairs = pairs
-	return pos - start, nil
-}
-
 // Returns a string type AMF specified by the key. If the
 // key isn't found it returns a NotFoundError. If it is found
 // but is of the wrong type, this returns a WrongTypeError.
@@ -169,11 +138,6 @@ func (o *Object) Size() int {
 // Implements AmfType.Encode
 func (o *Object) Encode(w io.Writer) (int, error) {
 	return w.Write(o.EncodeBytes())
-}
-
-// Implements AmfType.EncodeTo
-func (o *Object) EncodeTo(slice []byte, pos int) {
-	copy(slice[pos:], o.EncodeBytes())
 }
 
 // Implements AmfType.EncodeBytes

@@ -28,19 +28,9 @@ func (n *Number) Decode(r io.Reader) error {
 		return err
 	}
 
-	_, err = n.DecodeFrom(bytes, 0)
-	return err
-}
-
-// Implements AmfType.DecodeFrom
-func (n *Number) DecodeFrom(slice []byte, pos int) (int, error) {
-	if pos+7 >= len(slice) {
-		return 0, io.EOF
-	}
-
-	bytes := getUint64(slice, pos)
-	n.num = math.Float64frombits(bytes)
-	return 8, nil
+	rawUint := getUint64(bytes, 0)
+	n.num = math.Float64frombits(rawUint)
+	return nil
 }
 
 // Gets the contained number
@@ -56,11 +46,6 @@ func (n *Number) SetNumber(num float64) {
 // Implements AmfType.Encode
 func (n *Number) Encode(w io.Writer) (int, error) {
 	return w.Write(n.EncodeBytes())
-}
-
-// Implements AmfType.EncodeTo
-func (n *Number) EncodeTo(slice []byte, pos int) {
-	copy(slice[pos:], n.EncodeBytes())
 }
 
 // Implements AmfType.EncodeBytes

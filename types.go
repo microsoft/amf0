@@ -12,16 +12,9 @@ type AmfType interface {
 	// the reader to return starting from the first byte _after_ the
 	// type marker.
 	Decode(io.Reader) error
-	// Decodes information for the type from the byte slice starting
-	// at position `pos`. The position should point to the first
-	// byte _after_ the type marker. Returns the number of bytes
-	// consumed, or an error.
-	DecodeFrom(slice []byte, pos int) (int, error)
 	// Encodes and writes the type to the reader. Returns an error
 	// if one occurred on the reader.
 	Encode(io.Writer) (int, error)
-	// Encodes and writes the type to the position in the slice.
-	EncodeTo(slice []byte, pos int)
 	// Encodes and returns a byte slice representing the type.
 	EncodeBytes() []byte
 	// Gets the associated marker byte for the type.
