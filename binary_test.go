@@ -75,3 +75,31 @@ func TestGetVarUint(t *testing.T) {
 	b = []byte{0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42}
 	assert.Equal(t, binary.BigEndian.Uint64(b), getVarUint(b, 0, 8))
 }
+
+func TestRwReader(t *testing.T) {
+	b := make([]byte, 0xFF)
+	for i := 0x00; i < 0xFF; i++ {
+		b[i] = byte(i)
+	}
+
+	r := newRwReader(&reluctantReader{src: b})
+	out, _ := readBytes(r, 5)
+	assert.Equal(t, []byte{0x00, 0x01, 0x02, 0x03, 0x04}, out)
+	r.Rewind([]byte{0x03, 0x04})
+	out, _ = readBytes(r, 5)
+	assert.Equal(t, []byte{0x03, 0x04, 0x05, 0x06, 0x07}, out)
+	out, _ = readBytes(r, 5)
+	assert.Equal(t, []byte{0x08, 0x09, 0x0a, 0x0b, 0x0c}, out)
+
+	out = make([]byte, 1)
+	r.Rewind([]byte{0x0b, 0x0c})
+	n, _ := r.Read(out)
+	assert.Equal(t, 1, n)
+	assert.Equal(t, byte(0x0b), out[0])
+	n, _ = r.Read(out)
+	assert.Equal(t, 1, n)
+	assert.Equal(t, byte(0x0c), out[0])
+	n, _ = r.Read(out)
+	assert.Equal(t, 1, n)
+	assert.Equal(t, byte(0x0d), out[0])
+}

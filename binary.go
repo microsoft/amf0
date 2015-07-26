@@ -104,3 +104,91 @@ func readBytes(r io.Reader, n int) ([]byte, error) {
 
 	return output, nil
 }
+
+// The write collector wraps around a writer. It allowed for
+// multiple writes without having to check errors and gather
+// totals on every write.
+type writeCollector struct {
+	w     io.Writer
+	err   error
+	total int
+}
+
+func newWriteCollector(w io.Writer) *writeCollector {
+	return &writeCollector{w: w}
+}
+
+// Attempts to write bytes to the underlying writer.
+func (w *writeCollector) Write(b []byte) (int, error) {
+	if w.err != nil {
+		return 0, w.err
+	}
+
+	n, err := w.w.Write(b)
+	w.err = err
+	w.total += n
+	return n, err
+}
+
+// Returns the total bytes written, and any error that occurred.
+func (w *writeCollector) Totals() (int, error) {
+	return w.total, w.err
+}
+
+var _ io.Writer = &writeCollector{}
+
+// Rewinding reader is used to wrap an io.Reader and allow bytes
+// to be pushed back on to read again later.
+type rewindingReader interface {
+	io.Reader
+	// Push bytes back on to the reader. This is a FILO stack.
+	Rewind(b []byte)
+}
+
+// Implementation of the rewindingReader.
+type rwReader struct {
+	reader  io.Reader
+	rewound [][]byte
+	// idx points to the position where the next rewound byte
+	// would be stored
+	idx int
+}
+
+func newRwReader(r io.Reader) *rwReader {
+	return &rwReader{
+		reader:  r,
+		rewound: make([][]byte, 8),
+		idx:     0,
+	}
+}
+
+// Reads bytes into p, like an io.Reader. If there are rewound
+// bytes, then they will be read first.
+func (r *rwReader) Read(p []byte) (n int, err error) {
+	if r.idx == 0 {
+		return r.reader.Read(p)
+	}
+
+	b := r.rewound[r.idx-1]
+	lb, lp := len(b), len(p)
+
+	copy(p, b)
+
+	if lp >= lb {
+		r.idx--
+		return lb, nil
+	} else {
+		r.rewound[r.idx-1] = b[lp:]
+		return lp, nil
+	}
+}
+
+// Pushes byes back on to the reader, creating a FILO stack.
+// After the stack is empty (no more rewound bytes), it will
+// resume reading from the underlying reader.
+func (r *rwReader) Rewind(p []byte) {
+	r.rewound[r.idx] = p
+	r.idx++
+}
+
+var _ rewindingReader = &rwReader{}
