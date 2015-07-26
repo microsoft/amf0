@@ -9,15 +9,32 @@ type Object struct {
 	*paired
 }
 
-type objectPair struct {
-	Key   []byte
-	Value AmfType
-}
-
 var _ AmfType = &Object{}
 
 func NewObject() *Object {
-	return &Object{newPaired(objectKeyDecode)}
+	return &Object{newPaired()}
+}
+
+var objectEndSeq = []byte{0x00, 0x00, MARKER_OBJECT_END}
+
+// Implements AmfType.Decode
+func (o *Object) Decode(r io.Reader) error {
+	rwr := newRwReader(r)
+	for {
+		cont, err := objectShouldContinue(rwr)
+		if err != nil {
+			return err
+		}
+		if !cont {
+			break
+		}
+
+		if err := o.decodePair(rwr); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // Adds a new pair to the object.
@@ -48,9 +65,7 @@ func (o *Object) Marker() byte {
 	return MARKER_OBJECT
 }
 
-var objectEndSeq = []byte{0x00, 0x00, MARKER_OBJECT_END}
-
-func objectKeyDecode(r rewindingReader) (bool, error) {
+func objectShouldContinue(r rewindingReader) (bool, error) {
 	b, err := readBytes(r, 3)
 	if err != nil {
 		return false, err

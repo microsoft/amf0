@@ -6,16 +6,10 @@ import (
 	"io"
 )
 
-// Decode will be called each time a key is read. It should return
-// whether to keep going. If it reads data from the reader, then
-// it should rewind it back to its original position.
-type pairedDecode func(r rewindingReader) (bool, error)
-
 // The Paired structure is used to parse types which have key/value
 // pairs, such as objects and arrays.
 type paired struct {
-	decode pairedDecode
-	pairs  []*pair
+	pairs []*pair
 }
 
 type pair struct {
@@ -23,11 +17,8 @@ type pair struct {
 	Value AmfType
 }
 
-func newPaired(fn pairedDecode) *paired {
-	return &paired{
-		decode: fn,
-		pairs:  make([]*pair, 0),
-	}
+func newPaired() *paired {
+	return &paired{pairs: make([]*pair, 0)}
 }
 
 func newPair(key []byte, value AmfType) *pair {
@@ -44,33 +35,24 @@ var NotFoundError = errors.New("Item not found in the object.")
 // the one requested.
 var WrongTypeError = errors.New("Item not found in the object.")
 
-// Implements AmfType.Decode
-func (p *paired) Decode(r io.Reader) error {
-	var pairs []*pair
+// Decodes a single kv pair from the array
+func (p *paired) decodePair(r io.Reader) error {
 	str := NewString()
-	rwr := newRwReader(r)
-	for {
-		cont, err := p.decode(rwr)
-		if err != nil {
-			return err
-		}
-		if !cont {
-			break
-		}
 
-		if err := str.Decode(rwr); err != nil {
-			return err
-		}
-
-		value, err := Decode(rwr)
-		if err != nil {
-			return err
-		}
-
-		pairs = append(pairs, &pair{Key: str.GetBytes(), Value: value})
+	if err := str.Decode(r); err != nil {
+		return err
 	}
 
-	p.pairs = pairs
+	value, err := Decode(r)
+	if err != nil {
+		return err
+	}
+
+	p.pairs = append(p.pairs, &pair{
+		Key:   str.GetBytes(),
+		Value: value,
+	})
+
 	return nil
 }
 
