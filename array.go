@@ -2,6 +2,7 @@ package amf0
 
 import (
 	"bytes"
+	"errors"
 	"io"
 )
 
@@ -31,6 +32,15 @@ func (a *Array) Decode(r io.Reader) error {
 		}
 	}
 
+	ender, err := readBytes(r, 3)
+	if err != nil {
+		return err
+	}
+
+	if bytes.Compare(ender, objectEndSeq) != 0 {
+		return errors.New("amf0: missing end sequence for array")
+	}
+
 	return nil
 }
 
@@ -48,8 +58,9 @@ func (a *Array) Encode(w io.Writer) (int, error) {
 	num := make([]byte, 4)
 	putUint32(num, 0, uint32(len(a.pairs)))
 	wc.Write(num)
-
 	a.writePairs(wc)
+	wc.Write(objectEndSeq)
+
 	return wc.Totals()
 }
 
