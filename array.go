@@ -11,6 +11,7 @@ type Array struct {
 }
 
 var _ AmfType = &Array{}
+var _ Paired = &Array{}
 
 func NewArray() *Array {
 	return &Array{newPaired()}
@@ -42,12 +43,6 @@ func (a *Array) Decode(r io.Reader) error {
 	}
 
 	return nil
-}
-
-// Adds a new pair to the object.
-func (a *Array) Add(key string, value AmfType) *Array {
-	a.paired.Add(key, value)
-	return a
 }
 
 // Implements AmfType.Encode

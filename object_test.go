@@ -37,11 +37,11 @@ func TestObjectDecodes(t *testing.T) {
 
 func TestObjectBuildsAndEncodes(t *testing.T) {
 	s := NewObject()
-	s.Add("app", NewString("myapp")).
-		Add("type", NewString("nonprivate")).
-		Add("flashVer", NewString("FMLE/3.0 (compatible; FMSc/1.0)")).
-		Add("swfUrl", NewString("rtmp://localhost/myapp")).
-		Add("tcUrl", NewString("rtmp://localhost/myapp"))
+	s.Add("app", NewString("myapp"))
+	s.Add("type", NewString("nonprivate"))
+	s.Add("flashVer", NewString("FMLE/3.0 (compatible; FMSc/1.0)"))
+	s.Add("swfUrl", NewString("rtmp://localhost/myapp"))
+	s.Add("tcUrl", NewString("rtmp://localhost/myapp"))
 
 	assert.Equal(t, s.EncodeBytes(), append(
 		[]byte{MARKER_OBJECT}, objTestData...))
@@ -66,11 +66,12 @@ func BenchmarkObjectLookup(b *testing.B) {
 
 func BenchmarkObjectBuild(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		NewObject().Add("app", NewString("myapp")).
-			Add("type", NewString("nonprivate")).
-			Add("flashVer", NewString("FMLE/3.0 (compatible; FMSc/1.0)")).
-			Add("swfUrl", NewString("rtmp://localhost/myapp")).
-			Add("tcUrl", NewString("rtmp://localhost/myapp")).
-			EncodeBytes()
+		a := NewObject()
+		a.Add("app", NewString("myapp"))
+		a.Add("type", NewString("nonprivate"))
+		a.Add("flashVer", NewString("FMLE/3.0 (compatible; FMSc/1.0)"))
+		a.Add("swfUrl", NewString("rtmp://localhost/myapp"))
+		a.Add("tcUrl", NewString("rtmp://localhost/myapp"))
+		a.EncodeBytes()
 	}
 }

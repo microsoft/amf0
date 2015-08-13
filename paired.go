@@ -6,6 +6,17 @@ import (
 	"io"
 )
 
+// The Paired interface can be used for accessing array and object types.
+type Paired interface {
+	AmfType
+	Add(key string, value AmfType)
+	String(key string) (*String, error)
+	Boolean(key string) (*Boolean, error)
+	Number(key string) (*Number, error)
+	Get(key string) (AmfType, error)
+	Size() int
+}
+
 // The Paired structure is used to parse types which have key/value
 // pairs, such as objects and arrays.
 type paired struct {

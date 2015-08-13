@@ -31,3 +31,23 @@ func TestReaderAssertions(t *testing.T) {
 	reader.String(&second)
 	assert.Equal(t, "Amf0: expected String (marker 0x2) but got 0x0", reader.Error().Error())
 }
+
+func TestPaired(t *testing.T) {
+	var p Paired
+
+	o := NewObject()
+	o.Add("foo", NewString("bar"))
+	reader := NewReader(&reluctantReader{src: o.EncodeBytes()})
+	reader.Paired(&p)
+	k, err := p.String("foo")
+	assert.Nil(t, err)
+	assert.Equal(t, "bar", k.GetBody())
+
+	a := NewArray()
+	a.Add("foo", NewString("bar"))
+	reader = NewReader(&reluctantReader{src: a.EncodeBytes()})
+	reader.Paired(&p)
+	k, err = p.String("foo")
+	assert.Nil(t, err)
+	assert.Equal(t, "bar", k.GetBody())
+}

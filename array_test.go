@@ -51,11 +51,12 @@ func BenchmarkArrayLookup(b *testing.B) {
 
 func BenchmarkArrayBuild(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		NewArray().Add("app", NewString("myapp")).
-			Add("type", NewString("nonprivate")).
-			Add("flashVer", NewString("FMLE/3.0 (compatible; FMSc/1.0)")).
-			Add("swfUrl", NewString("rtmp://localhost/myapp")).
-			Add("tcUrl", NewString("rtmp://localhost/myapp")).
-			EncodeBytes()
+		a := NewArray()
+		a.Add("app", NewString("myapp"))
+		a.Add("type", NewString("nonprivate"))
+		a.Add("flashVer", NewString("FMLE/3.0 (compatible; FMSc/1.0)"))
+		a.Add("swfUrl", NewString("rtmp://localhost/myapp"))
+		a.Add("tcUrl", NewString("rtmp://localhost/myapp"))
+		a.EncodeBytes()
 	}
 }

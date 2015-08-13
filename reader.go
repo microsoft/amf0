@@ -114,6 +114,30 @@ func (r *Reader) Object(into **Object) *Reader {
 	return r.decode(MARKER_OBJECT, "Object", target)
 }
 
+func (r *Reader) Paired(into *Paired) *Reader {
+	if r.lastErr != nil {
+		return r
+	}
+
+	code, err := readBytes(r.reader, 1)
+	if err != nil {
+		r.lastErr = err
+		return r
+	}
+
+	if code[0] == MARKER_OBJECT {
+		*into = NewObject()
+	} else if code[0] == MARKER_ECMA_ARRAY {
+		*into = NewArray()
+	} else {
+		r.lastErr = fmt.Errorf("Amf0: expected to get a paired type, but got 0x%x", code[0])
+		return r
+	}
+
+	r.lastErr = (*into).Decode(r.reader)
+	return r
+}
+
 // Decodes a null value from the stream.
 func (r *Reader) Null(into **NullType) *Reader {
 	target := NewNull()

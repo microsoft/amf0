@@ -10,6 +10,7 @@ type Object struct {
 }
 
 var _ AmfType = &Object{}
+var _ Paired = &Object{}
 
 func NewObject() *Object {
 	return &Object{newPaired()}
@@ -35,12 +36,6 @@ func (o *Object) Decode(r io.Reader) error {
 	}
 
 	return nil
-}
-
-// Adds a new pair to the object.
-func (o *Object) Add(key string, value AmfType) *Object {
-	o.paired.Add(key, value)
-	return o
 }
 
 // Implements AmfType.Encode
