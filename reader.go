@@ -6,6 +6,20 @@ import (
 )
 
 // Provides a high-level reader structure for managing AMF streams.
+// Example usage:
+//
+//      var myNum *Number
+//      var myObj *Object
+//      err := NewReader(myReader).
+//          Skip(2).
+//          Number(&myNum).
+//          Object(&myObj).
+//          Error()
+//
+//      if err != nil {
+//          return err
+//      }
+//
 type Reader struct {
 	reader  io.Reader
 	lastErr error
@@ -60,7 +74,7 @@ func (r *Reader) String(into **String) *Reader {
 	return r.decode(MARKER_STRING, "String", target)
 }
 
-// Decodes a string from the stream.
+// Decodes a long string from the stream.
 func (r *Reader) LongString(into **LongString) *Reader {
 	target := NewLongString()
 	*into = target
@@ -68,7 +82,7 @@ func (r *Reader) LongString(into **LongString) *Reader {
 	return r.decode(MARKER_LONG_STRING, "LongString", target)
 }
 
-// Decodes a string from the stream.
+// Decodes a boolean from the stream.
 func (r *Reader) Boolean(into **Boolean) *Reader {
 	target := NewBoolean()
 	*into = target
@@ -76,7 +90,7 @@ func (r *Reader) Boolean(into **Boolean) *Reader {
 	return r.decode(MARKER_BOOLEAN, "Boolean", target)
 }
 
-// Decodes a string from the stream.
+// Decodes a number from the stream.
 func (r *Reader) Number(into **Number) *Reader {
 	target := NewNumber()
 	*into = target
@@ -84,7 +98,7 @@ func (r *Reader) Number(into **Number) *Reader {
 	return r.decode(MARKER_NUMBER, "Number", target)
 }
 
-// Decodes a string from the stream.
+// Decodes an array from the stream.
 func (r *Reader) Array(into **Array) *Reader {
 	target := NewArray()
 	*into = target
@@ -92,7 +106,7 @@ func (r *Reader) Array(into **Array) *Reader {
 	return r.decode(MARKER_ECMA_ARRAY, "Array", target)
 }
 
-// Decodes a string from the stream.
+// Decodes an object from the stream.
 func (r *Reader) Object(into **Object) *Reader {
 	target := NewObject()
 	*into = target
@@ -100,7 +114,7 @@ func (r *Reader) Object(into **Object) *Reader {
 	return r.decode(MARKER_OBJECT, "Object", target)
 }
 
-// Decodes a string from the stream.
+// Decodes a null value from the stream.
 func (r *Reader) Null(into **NullType) *Reader {
 	target := NewNull()
 	*into = target
