@@ -15,8 +15,6 @@ type AmfType interface {
 	// Encodes and writes the type to the reader. Returns an error
 	// if one occurred on the reader.
 	Encode(io.Writer) (int, error)
-	// Encodes and returns a byte slice representing the type.
-	EncodeBytes() []byte
 	// Gets the associated marker byte for the type.
 	Marker() byte
 }
