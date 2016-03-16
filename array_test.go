@@ -27,12 +27,10 @@ func TestArrayDecodes(t *testing.T) {
 }
 
 func TestArrayBuildsAndEncodes(t *testing.T) {
-	t.Skip()
-
 	s := NewArray()
 	s.Add("foo", NewString("bar"))
 
-	assert.Equal(t, arrTestData, s.EncodeBytes()[1:])
+	assert.Equal(t, arrTestData, s.EncodeBytes())
 }
 
 func BenchmarkArrayDecode(b *testing.B) {

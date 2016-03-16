@@ -67,6 +67,22 @@ func (p *paired) decodePair(r io.Reader) error {
 	return nil
 }
 
+// Writes out the key pairs.
+func (p *paired) writePairs(w io.Writer) (int, error) {
+	buf := new(bytes.Buffer)
+
+	for _, pair := range p.pairs {
+		key := String(string(pair.Key))
+		key.Encode(buf)
+
+		buf.WriteByte(pair.Value.Marker())
+		pair.Value.Encode(buf)
+	}
+
+	n, err := io.Copy(w, buf)
+	return int(n), err
+}
+
 // Returns a string type AMF specified by the key. If the
 // key isn't found it returns a NotFoundError. If it is found
 // but is of the wrong type, this returns a WrongTypeError.
@@ -135,15 +151,4 @@ func (p *paired) Add(key string, value AmfType) {
 // Returns the number of kv pairs in the object.
 func (p *paired) Size() int {
 	return len(p.pairs)
-}
-
-// Writes out the key pairs.
-func (p *paired) writePairs(wc *writeCollector) {
-	keylen := make([]byte, 2)
-	for _, pair := range p.pairs {
-		putUint16(keylen, 0, uint16(len(pair.Key)))
-		wc.Write(keylen)
-		wc.Write(pair.Key)
-		pair.Value.Encode(wc)
-	}
 }

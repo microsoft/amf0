@@ -2,6 +2,7 @@ package amf0
 
 import (
 	"bytes"
+	"encoding/binary"
 	"errors"
 	"io"
 )
@@ -17,28 +18,29 @@ func NewArray() *Array {
 	return &Array{newPaired()}
 }
 
+// Implements AmfType.Marker
+func (a *Array) Marker() byte { return MARKER_ECMA_ARRAY }
+
 // Implements AmfType.Decode
 func (a *Array) Decode(r io.Reader) error {
-	numBytes, err := readBytes(r, 4)
-	if err != nil {
+	var n [4]byte
+	if _, err := r.Read(n[:]); err != nil {
 		return err
 	}
 
-	num := int(getUint32(numBytes, 0))
-	a.pairs = make([]*pair, 0, num)
-
-	for i := 0; i < num; i++ {
+	a.pairs = make([]*pair, 0, binary.BigEndian.Uint32(n[:]))
+	for i := 0; i < cap(a.pairs); i++ {
 		if err := a.decodePair(r); err != nil {
 			return err
 		}
 	}
 
-	ender, err := readBytes(r, 3)
-	if err != nil {
+	var endSeq [3]byte
+	if _, err := r.Read(endSeq[:]); err != nil {
 		return err
 	}
 
-	if bytes.Compare(ender, objectEndSeq) != 0 {
+	if !bytes.Equal(objectEndSeq, endSeq[:]) {
 		return errors.New("amf0: missing end sequence for array")
 	}
 
@@ -47,16 +49,14 @@ func (a *Array) Decode(r io.Reader) error {
 
 // Implements AmfType.Encode
 func (a *Array) Encode(w io.Writer) (int, error) {
-	wc := newWriteCollector(w)
-	wc.Write([]byte{MARKER_ECMA_ARRAY})
+	buf := new(bytes.Buffer)
 
-	num := make([]byte, 4)
-	putUint32(num, 0, uint32(len(a.pairs)))
-	wc.Write(num)
-	a.writePairs(wc)
-	wc.Write(objectEndSeq)
+	binary.Write(buf, binary.BigEndian, uint32(len(a.pairs)))
+	a.writePairs(buf)
+	buf.Write(objectEndSeq)
 
-	return wc.Totals()
+	n, err := io.Copy(w, buf)
+	return int(n), err
 }
 
 // Implements AmfType.EncodeBytes
@@ -65,9 +65,4 @@ func (a *Array) EncodeBytes() []byte {
 	a.Encode(buf)
 
 	return buf.Bytes()
-}
-
-// Implements AmfType.Marker
-func (a *Array) Marker() byte {
-	return MARKER_ECMA_ARRAY
 }
