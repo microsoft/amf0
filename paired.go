@@ -48,7 +48,7 @@ var WrongTypeError = errors.New("Item not found in the object.")
 
 // Decodes a single kv pair from the array
 func (p *paired) decodePair(r io.Reader) error {
-	str := NewString()
+	str := new(String)
 
 	if err := str.Decode(r); err != nil {
 		return err
@@ -60,7 +60,7 @@ func (p *paired) decodePair(r io.Reader) error {
 	}
 
 	p.pairs = append(p.pairs, &pair{
-		Key:   str.GetBytes(),
+		Key:   []byte(string(*str)),
 		Value: value,
 	})
 

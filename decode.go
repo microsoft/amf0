@@ -1,9 +1,9 @@
 package amf0
 
 import (
-	"errors"
 	"fmt"
 	"io"
+	"reflect"
 )
 
 // Decodes a single packet from an io.Reader
@@ -13,7 +13,7 @@ func Decode(r io.Reader) (AmfType, error) {
 		return nil, err
 	}
 
-	packet, err := Identify(token[0])
+	packet, err := DefaultIdentifier.Identify(token[0])
 	if err != nil {
 		return nil, err
 	}
@@ -21,21 +21,38 @@ func Decode(r io.Reader) (AmfType, error) {
 	return packet, packet.Decode(r)
 }
 
-// Identifies the packet type given by `b`, returning a new
-// AmfType if recognized, or error otherwise.
-func Identify(b byte) (AmfType, error) {
-	if int(b) >= len(table) {
-		return nil, genUnknownErrorFor(b)
-	}
-	fn := table[b]
-	if fn == nil {
-		return nil, genUnknownErrorFor(b)
-	}
+var DefaultIdentifier *Identifier = NewIdentifier([]AmfType{
+	new(Bool), new(Number), new(String), new(Number),
+})
 
-	return fn(), nil
+type Identifier struct {
+	typs map[byte]reflect.Type
 }
 
-// Generates an error for an invalid packet market b.
-func genUnknownErrorFor(b byte) error {
-	return errors.New(fmt.Sprintf("Unknown packet identified by %d", b))
+func NewIdentifier(types []AmfType) *Identifier {
+	i := &Identifier{
+		typs: make(map[byte]reflect.Type),
+	}
+
+	for _, t := range types {
+		i.typs[t.Marker()] = reflect.TypeOf(t).Elem()
+	}
+
+	return i
+}
+
+func (i *Identifier) Identify(id byte) (AmfType, error) {
+	typ := i.typs[id]
+	if typ == nil {
+		return nil, UnknownPacketError(id)
+	}
+
+	v := reflect.New(typ).Interface().(AmfType)
+	return v, nil
+}
+
+type UnknownPacketError byte
+
+func (e UnknownPacketError) Error() string {
+	return fmt.Sprintf("Unknown packet identifier for %d", byte(e))
 }

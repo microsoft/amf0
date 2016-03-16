@@ -51,10 +51,10 @@ var table = [...]factory{
 		return nil
 	},
 	MARKER_STRING: func() AmfType {
-		return NewString()
+		return nil
 	},
 	MARKER_LONG_STRING: func() AmfType {
-		return NewLongString()
+		return nil
 	},
 	MARKER_OBJECT: func() AmfType {
 		return NewObject()
