@@ -2,30 +2,40 @@ package amf0
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/assert"
+	"io/ioutil"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
+func bytesOf(v AmfType) []byte {
+	buf := new(bytes.Buffer)
+	v.Encode(buf)
+
+	return buf.Bytes()
+}
+
 func TestBooleanBuildsAndEncodes(t *testing.T) {
-	s := NewBoolean()
-	s.Set(true)
-	assert.Equal(t, []byte{MARKER_BOOLEAN, 1}, s.EncodeBytes())
-	s.Set(false)
-	assert.Equal(t, []byte{MARKER_BOOLEAN, 0}, s.EncodeBytes())
+	b1, b2 := new(Bool), new(Bool)
+
+	*b1 = true
+	*b2 = false
+
+	assert.Equal(t, []byte{1}, bytesOf(b1))
+	assert.Equal(t, []byte{0}, bytesOf(b2))
 }
 
 func TestBooleanDecodes(t *testing.T) {
-	bytes := []byte{1}
+	o := new(Bool)
+	err := o.Decode(bytes.NewReader([]byte{1}))
 
-	o := NewBoolean()
-	err := o.Decode(&reluctantReader{src: bytes})
 	assert.Nil(t, err)
-	assert.True(t, o.True())
+	assert.True(t, bool(*o))
 }
 
 func BenchmarkBooleanDecode(b *testing.B) {
 	data := []byte{0}
-	out := NewBoolean()
+	out := new(Bool)
 
 	for i := 0; i < b.N; i++ {
 		out.Decode(bytes.NewReader(data))
@@ -33,10 +43,9 @@ func BenchmarkBooleanDecode(b *testing.B) {
 }
 
 func BenchmarkBooleanEncode(b *testing.B) {
-	in := NewBoolean()
-	in.Set(true)
+	in := Bool(true)
 
 	for i := 0; i < b.N; i++ {
-		in.EncodeBytes()
+		in.Encode(ioutil.Discard)
 	}
 }

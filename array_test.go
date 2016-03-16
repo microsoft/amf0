@@ -2,8 +2,9 @@ package amf0
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var arrTestData = []byte{0x00, 0x00, 0x00, 0x01, 0x00, 0x03, 0x66,
@@ -19,9 +20,9 @@ func TestArrayDecodes(t *testing.T) {
 	s, _ := o.String("foo")
 	assert.Equal(t, "bar", s.GetBody())
 
-	_, err = o.Boolean("app")
+	_, err = o.Bool("app")
 	assert.Equal(t, WrongTypeError, err)
-	_, err = o.Boolean("foo")
+	_, err = o.Bool("foo")
 	assert.Equal(t, NotFoundError, err)
 }
 

@@ -4,58 +4,31 @@ import (
 	"io"
 )
 
-type Boolean struct {
-	isTrue byte
-}
+type Bool bool
 
-var _ AmfType = &Boolean{}
-
-// Creates a new Boolean type, with an optional initial value.
-func NewBoolean(bol ...bool) *Boolean {
-	b := &Boolean{}
-	if len(bol) == 1 {
-		b.Set(bol[0])
-	}
-
-	return b
-}
+var _ AmfType = new(Bool)
 
 // Implements AmfType.Decode
-func (n *Boolean) Decode(r io.Reader) error {
+func (b *Bool) Decode(r io.Reader) error {
 	bytes, err := readBytes(r, 1)
 	if err != nil {
 		return err
 	}
 
-	n.isTrue = bytes[0]
+	*b = Bool(bytes[0] != 0)
+
 	return nil
 }
 
-// Gets the contained boolean
-func (n *Boolean) True() bool {
-	return n.isTrue > 0
-}
-
-// Sets the contained boolean.
-func (n *Boolean) Set(isTrue bool) {
-	if isTrue {
-		n.isTrue = 1
-	} else {
-		n.isTrue = 0
-	}
-}
-
 // Implements AmfType.Encode
-func (n *Boolean) Encode(w io.Writer) (int, error) {
-	return w.Write(n.EncodeBytes())
-}
+func (b *Bool) Encode(w io.Writer) (int, error) {
+	var buf [1]byte
+	if bool(*b) == true {
+		buf[0] = 0x1
+	}
 
-// Implements AmfType.EncodeBytes
-func (n *Boolean) EncodeBytes() []byte {
-	return []byte{MARKER_BOOLEAN, n.isTrue}
+	return w.Write(buf[:])
 }
 
 // Implements AmfType.Marker
-func (b *Boolean) Marker() byte {
-	return MARKER_BOOLEAN
-}
+func (b *Bool) Marker() byte { return 0x01 }

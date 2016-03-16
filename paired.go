@@ -11,7 +11,7 @@ type Paired interface {
 	AmfType
 	Add(key string, value AmfType)
 	String(key string) (*String, error)
-	Boolean(key string) (*Boolean, error)
+	Bool(key string) (*Bool, error)
 	Number(key string) (*Number, error)
 	Get(key string) (AmfType, error)
 	Size() int
@@ -86,13 +86,13 @@ func (p *paired) String(key string) (*String, error) {
 // Returns a boolean type AMF specified by the key. If the
 // key isn't found it returns a NotFoundError. If it is found
 // but is of the wrong type, this returns a WrongTypeError.
-func (p *paired) Boolean(key string) (*Boolean, error) {
+func (p *paired) Bool(key string) (*Bool, error) {
 	val, err := p.Get(key)
 	if err != nil {
 		return nil, err
 	}
 
-	if cast, ok := val.(*Boolean); ok {
+	if cast, ok := val.(*Bool); ok {
 		return cast, nil
 	}
 

@@ -2,8 +2,9 @@ package amf0
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var objTestData = []byte{0, 3, 97, 112, 112, 2, 0, 5, 109,
@@ -29,9 +30,9 @@ func TestObjectDecodes(t *testing.T) {
 	s, _ = o.String("type")
 	assert.Equal(t, "nonprivate", s.GetBody())
 
-	_, err = o.Boolean("app")
+	_, err = o.Bool("app")
 	assert.Equal(t, WrongTypeError, err)
-	_, err = o.Boolean("foo")
+	_, err = o.Bool("foo")
 	assert.Equal(t, NotFoundError, err)
 }
 

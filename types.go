@@ -48,7 +48,7 @@ var table = [...]factory{
 		return nil
 	},
 	MARKER_BOOLEAN: func() AmfType {
-		return NewBoolean()
+		return nil
 	},
 	MARKER_STRING: func() AmfType {
 		return NewString()
