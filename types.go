@@ -45,7 +45,7 @@ type factory func() AmfType
 // types, this becomes much more efficient that a switch statement.
 var table = [...]factory{
 	MARKER_NUMBER: func() AmfType {
-		return NewNumber()
+		return nil
 	},
 	MARKER_BOOLEAN: func() AmfType {
 		return NewBoolean()
