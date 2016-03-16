@@ -60,7 +60,7 @@ var table = [...]factory{
 		return NewObject()
 	},
 	MARKER_NULL: func() AmfType {
-		return NewNull()
+		return nil
 	},
 	MARKER_ECMA_ARRAY: func() AmfType {
 		return NewArray()

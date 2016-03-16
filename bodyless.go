@@ -1,29 +1,21 @@
 package amf0
 
-import (
-	"io"
+import "io"
+
+type (
+	Null      struct{}
+	Undefined struct{}
 )
 
-type bodylessType struct {
-	marker byte
-}
+var (
+	_ AmfType = new(Null)
+	_ AmfType = new(Undefined)
+)
 
-// Decode implements AmfType.Decode
-func (b *bodylessType) Decode(r io.Reader) error {
-	return nil
-}
+func (n *Null) Decode(r io.Reader) error        { return nil }
+func (n *Null) Encode(w io.Writer) (int, error) { return 0, nil }
+func (n *Null) Marker() byte                    { return 0x05 }
 
-// Encode implements AmfType.Encode
-func (b *bodylessType) Encode(w io.Writer) (int, error) {
-	return w.Write([]byte{b.marker})
-}
-
-// EncodeBytes implements AmfType.EncodeBytes
-func (b *bodylessType) EncodeBytes() []byte {
-	return []byte{b.marker}
-}
-
-// Implements AmfType.Marker
-func (b *bodylessType) Marker() byte {
-	return b.marker
-}
+func (u *Undefined) Decode(r io.Reader) error        { return nil }
+func (u *Undefined) Encode(w io.Writer) (int, error) { return 0, nil }
+func (u *Undefined) Marker() byte                    { return 0x06 }
