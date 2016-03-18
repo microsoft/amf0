@@ -10,13 +10,13 @@ type Identifier struct {
 }
 
 var (
-	DefaultIdentifier *Identifier = NewIdentifier([]AmfType{
+	DefaultIdentifier *Identifier = NewIdentifier(
 		new(Array), new(Null), new(Undefined), new(Bool), new(Number),
 		new(Object), new(String), new(LongString),
-	})
+	)
 )
 
-func NewIdentifier(types []AmfType) *Identifier {
+func NewIdentifier(types ...AmfType) *Identifier {
 	i := &Identifier{
 		typs: make(map[byte]reflect.Type),
 	}
@@ -28,8 +28,12 @@ func NewIdentifier(types []AmfType) *Identifier {
 	return i
 }
 
+func (i *Identifier) TypeOf(id byte) reflect.Type {
+	return i.typs[id]
+}
+
 func (i *Identifier) Identify(id byte) (AmfType, error) {
-	typ := i.typs[id]
+	typ := i.TypeOf(id)
 	if typ == nil {
 		return nil, UnknownPacketError(id)
 	}
@@ -41,5 +45,5 @@ func (i *Identifier) Identify(id byte) (AmfType, error) {
 type UnknownPacketError byte
 
 func (e UnknownPacketError) Error() string {
-	return fmt.Sprintf("Unknown packet identifier for %d", byte(e))
+	return fmt.Sprintf("amf0: unknown packet identifier for 0x%x", byte(e))
 }
