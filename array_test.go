@@ -15,7 +15,7 @@ func TestArrayDecodes(t *testing.T) {
 	err := o.Decode(bytes.NewBuffer(arrTestData))
 
 	assert.Nil(t, err)
-	assert.Equal(t, 1, o.Size())
+	assert.Equal(t, 1, o.Len())
 
 	s, _ := o.String("foo")
 	assert.Equal(t, "bar", string(*s))

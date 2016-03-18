@@ -8,18 +8,17 @@ import (
 )
 
 type Array struct {
-	*paired
+	*Paired
 }
 
-var _ AmfType = &Array{}
-var _ Paired = &Array{}
+var _ AmfType = new(Array)
 
 func NewArray() *Array {
-	return &Array{newPaired()}
+	return &Array{NewPaired()}
 }
 
 // Implements AmfType.Marker
-func (a *Array) Marker() byte { return MARKER_ECMA_ARRAY }
+func (a *Array) Marker() byte { return 0x08 }
 
 // Implements AmfType.Decode
 func (a *Array) Decode(r io.Reader) error {
@@ -28,8 +27,8 @@ func (a *Array) Decode(r io.Reader) error {
 		return err
 	}
 
-	a.pairs = make([]*pair, 0, binary.BigEndian.Uint32(n[:]))
-	for i := 0; i < cap(a.pairs); i++ {
+	a.tuples = make([]*tuple, 0, binary.BigEndian.Uint32(n[:]))
+	for i := 0; i < cap(a.tuples); i++ {
 		if err := a.decodePair(r); err != nil {
 			return err
 		}
@@ -40,7 +39,7 @@ func (a *Array) Decode(r io.Reader) error {
 		return err
 	}
 
-	if !bytes.Equal(objectEndSeq, endSeq[:]) {
+	if !bytes.Equal(ObjectEndSeq, endSeq[:]) {
 		return errors.New("amf0: missing end sequence for array")
 	}
 
@@ -51,9 +50,9 @@ func (a *Array) Decode(r io.Reader) error {
 func (a *Array) Encode(w io.Writer) (int, error) {
 	buf := new(bytes.Buffer)
 
-	binary.Write(buf, binary.BigEndian, uint32(len(a.pairs)))
+	binary.Write(buf, binary.BigEndian, uint32(len(a.tuples)))
 	a.writePairs(buf)
-	buf.Write(objectEndSeq)
+	buf.Write(ObjectEndSeq)
 
 	n, err := io.Copy(w, buf)
 	return int(n), err

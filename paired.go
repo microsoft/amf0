@@ -6,87 +6,39 @@ import (
 	"io"
 )
 
-// The Paired interface can be used for accessing array and object types.
-type Paired interface {
-	AmfType
-	Add(key string, value AmfType)
-	String(key string) (*String, error)
-	Bool(key string) (*Bool, error)
-	Number(key string) (*Number, error)
-	Get(key string) (AmfType, error)
-	Size() int
+var (
+	// NotFoundError is returned when trying to get a key that doesn't
+	// exist.
+	NotFoundError = errors.New("Item not found in the object.")
+
+	// WrongTypeError is returned when a key exists, but its type is not the
+	// one requested.
+	WrongTypeError = errors.New("Item not found in the object.")
+)
+
+type Paired struct {
+	tuples []*tuple
 }
 
-// The Paired structure is used to parse types which have key/value
-// pairs, such as objects and arrays.
-type paired struct {
-	pairs []*pair
+func NewPaired() *Paired {
+	return &Paired{tuples: make([]*tuple, 0)}
 }
 
-type pair struct {
-	Key   []byte
-	Value AmfType
-}
+// Returns the number of kv pairs in the object.
+func (p *Paired) Len() int { return len(p.tuples) }
 
-func newPaired() *paired {
-	return &paired{pairs: make([]*pair, 0)}
-}
-
-func newPair(key []byte, value AmfType) *pair {
-	return &pair{
-		Key:   key,
-		Value: value,
-	}
-}
-
-// This error is returned when trying to get a key that doesn't exist.
-var NotFoundError = errors.New("Item not found in the object.")
-
-// This error is returned when a key exists, but its type is not
-// the one requested.
-var WrongTypeError = errors.New("Item not found in the object.")
-
-// Decodes a single kv pair from the array
-func (p *paired) decodePair(r io.Reader) error {
-	str := new(String)
-
-	if err := str.Decode(r); err != nil {
-		return err
-	}
-
-	value, err := Decode(r)
-	if err != nil {
-		return err
-	}
-
-	p.pairs = append(p.pairs, &pair{
-		Key:   []byte(string(*str)),
+// Adds a new pair to the object.
+func (p *Paired) Add(key string, value AmfType) {
+	p.tuples = append(p.tuples, &tuple{
+		Key:   []byte(key),
 		Value: value,
 	})
-
-	return nil
-}
-
-// Writes out the key pairs.
-func (p *paired) writePairs(w io.Writer) (int, error) {
-	buf := new(bytes.Buffer)
-
-	for _, pair := range p.pairs {
-		key := String(string(pair.Key))
-		key.Encode(buf)
-
-		buf.WriteByte(pair.Value.Marker())
-		pair.Value.Encode(buf)
-	}
-
-	n, err := io.Copy(w, buf)
-	return int(n), err
 }
 
 // Returns a string type AMF specified by the key. If the
 // key isn't found it returns a NotFoundError. If it is found
 // but is of the wrong type, this returns a WrongTypeError.
-func (p *paired) String(key string) (*String, error) {
+func (p *Paired) String(key string) (*String, error) {
 	val, err := p.Get(key)
 	if err != nil {
 		return nil, err
@@ -102,7 +54,7 @@ func (p *paired) String(key string) (*String, error) {
 // Returns a boolean type AMF specified by the key. If the
 // key isn't found it returns a NotFoundError. If it is found
 // but is of the wrong type, this returns a WrongTypeError.
-func (p *paired) Bool(key string) (*Bool, error) {
+func (p *Paired) Bool(key string) (*Bool, error) {
 	val, err := p.Get(key)
 	if err != nil {
 		return nil, err
@@ -115,40 +67,67 @@ func (p *paired) Bool(key string) (*Bool, error) {
 	return nil, WrongTypeError
 }
 
-// Returns a number type AMF specified by the key. If the
-// key isn't found it returns a NotFoundError. If it is found
-// but is of the wrong type, this returns a WrongTypeError.
-func (p *paired) Number(key string) (*Number, error) {
-	val, err := p.Get(key)
-	if err != nil {
-		return nil, err
-	}
-
-	if cast, ok := val.(*Number); ok {
-		return cast, nil
-	}
-
-	return nil, WrongTypeError
-}
-
 // Returns an item specified by the key, or returns a NotFoundError.
-func (p *paired) Get(key string) (AmfType, error) {
+func (p *Paired) Get(key string) (AmfType, error) {
 	kb := []byte(key)
-	for _, pair := range p.pairs {
-		if bytes.Compare(pair.Key, kb) == 0 {
-			return pair.Value, nil
+	for _, tuple := range p.tuples {
+		if bytes.Compare(tuple.Key, kb) == 0 {
+			return tuple.Value, nil
 		}
 	}
 
 	return nil, NotFoundError
 }
 
-// Adds a new pair to the object.
-func (p *paired) Add(key string, value AmfType) {
-	p.pairs = append(p.pairs, newPair([]byte(key), value))
+// Decodes a single kv pair from the array
+func (p *Paired) decodePair(r io.Reader) error {
+	str := new(String)
+	if err := str.Decode(r); err != nil {
+		return err
+	}
+
+	value, err := Decode(r)
+	if err != nil {
+		return err
+	}
+
+	p.tuples = append(p.tuples, &tuple{
+		Key:   []byte(string(*str)),
+		Value: value,
+	})
+	return nil
 }
 
-// Returns the number of kv pairs in the object.
-func (p *paired) Size() int {
-	return len(p.pairs)
+// Writes out the key pairs.
+func (p *Paired) writePairs(w io.Writer) (int, error) {
+	buf := new(bytes.Buffer)
+
+	for _, tuple := range p.tuples {
+		tuple.Encode(buf)
+	}
+
+	n, err := io.Copy(w, buf)
+	return int(n), err
+}
+
+type tuple struct {
+	Key   []byte
+	Value AmfType
+}
+
+func (t *tuple) Encode(w io.Writer) (int, error) {
+	buf := new(bytes.Buffer)
+
+	if _, err := NewString(string(t.Key)).Encode(buf); err != nil {
+		return 0, err
+	}
+	if _, err := buf.Write([]byte{t.Value.Marker()}); err != nil {
+		return 0, err
+	}
+	if _, err := t.Value.Encode(buf); err != nil {
+		return 0, err
+	}
+
+	n, err := io.Copy(w, buf)
+	return int(n), err
 }

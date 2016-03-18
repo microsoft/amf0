@@ -63,7 +63,10 @@ func strDecode(r io.Reader, sizeLen int) (string, error) {
 		return "", err
 	}
 
-	slen := getVarUint(sizeBytes, 0, sizeLen)
+	var slen uint64
+	for i := 0; i < sizeLen; i++ {
+		slen |= uint64(sizeBytes[i]) << (uint(sizeLen-i-1) << 3)
+	}
 
 	str := make([]byte, int(slen))
 	if _, err := r.Read(str); err != nil {

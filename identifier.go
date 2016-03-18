@@ -2,32 +2,19 @@ package amf0
 
 import (
 	"fmt"
-	"io"
 	"reflect"
 )
-
-// Decodes a single packet from an io.Reader
-func Decode(r io.Reader) (AmfType, error) {
-	token, err := readBytes(r, 1)
-	if err != nil {
-		return nil, err
-	}
-
-	packet, err := DefaultIdentifier.Identify(token[0])
-	if err != nil {
-		return nil, err
-	}
-
-	return packet, packet.Decode(r)
-}
-
-var DefaultIdentifier *Identifier = NewIdentifier([]AmfType{
-	new(Bool), new(Number), new(String), new(Number),
-})
 
 type Identifier struct {
 	typs map[byte]reflect.Type
 }
+
+var (
+	DefaultIdentifier *Identifier = NewIdentifier([]AmfType{
+		new(Array), new(Null), new(Undefined), new(Bool), new(Number),
+		new(Object), new(String), new(LongString),
+	})
+)
 
 func NewIdentifier(types []AmfType) *Identifier {
 	i := &Identifier{
