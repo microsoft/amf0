@@ -1,6 +1,16 @@
 package amf0
 
-import "io"
+import (
+	"fmt"
+	"io"
+	"reflect"
+)
+
+type UnknownPacketError byte
+
+func (e UnknownPacketError) Error() string {
+	return fmt.Sprintf("amf0: unknown packet identifier for 0x%x", byte(e))
+}
 
 type Decoder func(r io.Reader) (AmfType, error)
 
@@ -11,12 +21,13 @@ var (
 			return nil, err
 		}
 
-		packet, err := DefaultIdentifier.Identify(typeId[0])
-		if err != nil {
-			return nil, err
+		typ := DefaultIdentifier.TypeOf(typeId[0])
+		if typ == nil {
+			return nil, UnknownPacketError(typeId[0])
 		}
 
-		if err = packet.Decode(r); err != nil {
+		packet := reflect.New(typ).Interface().(AmfType)
+		if err := packet.Decode(r); err != nil {
 			return nil, err
 		}
 

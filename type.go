@@ -2,6 +2,7 @@ package amf0
 
 import (
 	"io"
+	"reflect"
 )
 
 // AMF Types (strings, numbers, etc) implement the AmfType
@@ -19,4 +20,7 @@ type AmfType interface {
 
 	// Gets the associated marker byte for the type.
 	Marker() byte
+
+	// Native returns the native Golang type assosciated with this AmfType.
+	Native() reflect.Type
 }

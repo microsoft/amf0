@@ -2,6 +2,7 @@ package amf0
 
 import (
 	"io"
+	"reflect"
 )
 
 type Bool bool
@@ -10,6 +11,9 @@ var _ AmfType = new(Bool)
 
 // Implements AmfType.Marker
 func (b *Bool) Marker() byte { return 0x01 }
+
+// Implements AmfType.Native
+func (b *Bool) Native() reflect.Type { return reflect.TypeOf(false) }
 
 // Implements AmfType.Decode
 func (b *Bool) Decode(r io.Reader) error {

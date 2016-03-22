@@ -3,6 +3,7 @@ package amf0
 import (
 	"bytes"
 	"io"
+	"reflect"
 )
 
 type (
@@ -29,7 +30,8 @@ func NewLongString(str string) *LongString {
 	return s
 }
 
-func (s *String) Marker() byte { return 0x02 }
+func (s *String) Marker() byte         { return 0x02 }
+func (s *String) Native() reflect.Type { return reflect.TypeOf("") }
 func (s *String) Decode(r io.Reader) error {
 	if v, err := strDecode(r, 2); err != nil {
 		return err
@@ -43,7 +45,8 @@ func (s *String) Encode(w io.Writer) (int, error) {
 	return strEncode(string(*s), w, 2)
 }
 
-func (l *LongString) Marker() byte { return 0x0c }
+func (l *LongString) Marker() byte         { return 0x0c }
+func (l *LongString) Native() reflect.Type { return reflect.TypeOf("") }
 func (l *LongString) Decode(r io.Reader) error {
 	if v, err := strDecode(r, 4); err != nil {
 		return err

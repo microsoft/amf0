@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"io"
 	"math"
+	"reflect"
 )
 
 type Number float64
@@ -11,6 +12,8 @@ type Number float64
 var _ AmfType = new(Number)
 
 func (n *Number) Marker() byte { return 0x00 }
+
+func (n *Number) Native() reflect.Type { return reflect.TypeOf(float64(1)) }
 
 // Implements AmfType.Decode
 func (n *Number) Decode(r io.Reader) error {

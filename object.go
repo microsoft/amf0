@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"io"
+	"reflect"
 )
 
 var (
@@ -22,6 +23,9 @@ func NewObject() *Object {
 
 // Implements AmfType.Marker
 func (o *Object) Marker() byte { return 0x03 }
+
+// Implements AmfType.Native
+func (o *Object) Native() reflect.Type { return reflect.TypeOf(o).Elem() }
 
 // Implements AmfType.Decode
 func (o *Object) Decode(r io.Reader) error {

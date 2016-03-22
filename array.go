@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	"reflect"
 )
 
 type Array struct {
@@ -19,6 +20,8 @@ func NewArray() *Array {
 
 // Implements AmfType.Marker
 func (a *Array) Marker() byte { return 0x08 }
+
+func (a *Array) Native() reflect.Type { return reflect.TypeOf(a).Elem() }
 
 // Implements AmfType.Decode
 func (a *Array) Decode(r io.Reader) error {

@@ -30,20 +30,18 @@ func TestFetchingUnknownPacketTypes(t *testing.T) {
 	assert.Nil(t, typ)
 }
 
-func TestIdentificationOfKnownPacketTypes(t *testing.T) {
+func TestFetchingKnownPacketNatives(t *testing.T) {
 	i := amf0.NewIdentifier(new(amf0.Bool))
 
-	typ, err := i.Identify(0x01)
+	typ := i.AmfType(false)
 
-	assert.Nil(t, err)
-	assert.IsType(t, new(amf0.Bool), typ)
+	assert.Equal(t, reflect.TypeOf(new(amf0.Bool)).Elem(), typ)
 }
 
-func TestIdentificationOfUnknownPacketTypes(t *testing.T) {
+func TestFetchingUnknownPacketNatives(t *testing.T) {
 	i := amf0.NewIdentifier()
 
-	typ, err := i.Identify(0x01)
+	typ := i.AmfType(false)
 
 	assert.Nil(t, typ)
-	assert.Equal(t, "amf0: unknown packet identifier for 0x1", err.Error())
 }
