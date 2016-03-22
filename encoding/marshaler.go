@@ -8,20 +8,29 @@ import (
 	"github.com/WatchBeam/amf0"
 )
 
+// Marshaler is a type capable of marshaling structs into their AMF-encoded
+// equivalents.
 type Marshaler struct {
 	i *amf0.Identifier
 }
 
+// Marshal is a method which delegates into the Marshaler type to Marshal a
+// struct into its AMF-encoded equivalent.
 func Marshal(v interface{}) ([]byte, error) {
 	return NewMarshaler().Marshal(v)
 }
 
+// NewMarshaler constructs a new Marshaler.
 func NewMarshaler() *Marshaler {
 	return &Marshaler{
 		i: amf0.DefaultIdentifier,
 	}
 }
 
+// Marshal marshals some interface{} into its AMF-encoded equal. It passes
+// through each field of a type one-by-one and marshals it by converting to its
+// AMF type. If a field is already an AMF type, it marshals it directly. It does
+// not recurse to embedded fields.
 func (m *Marshaler) Marshal(dest interface{}) ([]byte, error) {
 	buf := new(bytes.Buffer)
 
