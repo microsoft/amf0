@@ -30,7 +30,7 @@ func (b *Bool) Decode(r io.Reader) error {
 // Implements AmfType.Encode
 func (b *Bool) Encode(w io.Writer) (int, error) {
 	var buf [1]byte
-	if bool(*b) == true {
+	if *b {
 		buf[0] = 0x1
 	}
 
