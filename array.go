@@ -26,7 +26,7 @@ func (a *Array) Native() reflect.Type { return reflect.TypeOf(a).Elem() }
 // Implements AmfType.Decode
 func (a *Array) Decode(r io.Reader) error {
 	var n [4]byte
-	if _, err := r.Read(n[:]); err != nil {
+	if _, err := io.ReadFull(r, n[:]); err != nil {
 		return err
 	}
 
@@ -38,7 +38,7 @@ func (a *Array) Decode(r io.Reader) error {
 	}
 
 	var endSeq [3]byte
-	if _, err := r.Read(endSeq[:]); err != nil {
+	if _, err := io.ReadFull(r, endSeq[:]); err != nil {
 		return err
 	}
 

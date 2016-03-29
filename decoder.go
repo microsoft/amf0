@@ -17,7 +17,7 @@ type Decoder func(r io.Reader) (AmfType, error)
 var (
 	Decode Decoder = func(r io.Reader) (AmfType, error) {
 		var typeId [1]byte
-		if _, err := r.Read(typeId[:]); err != nil {
+		if _, err := io.ReadFull(r, typeId[:]); err != nil {
 			return nil, err
 		}
 

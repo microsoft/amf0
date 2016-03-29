@@ -62,7 +62,7 @@ func (l *LongString) Encode(w io.Writer) (int, error) {
 
 func strDecode(r io.Reader, sizeLen int) (string, error) {
 	sizeBytes := make([]byte, sizeLen)
-	if _, err := r.Read(sizeBytes); err != nil {
+	if _, err := io.ReadFull(r, sizeBytes); err != nil {
 		return "", err
 	}
 
@@ -72,7 +72,7 @@ func strDecode(r io.Reader, sizeLen int) (string, error) {
 	}
 
 	str := make([]byte, int(slen))
-	if _, err := r.Read(str); err != nil {
+	if _, err := io.ReadFull(r, str); err != nil {
 		return "", err
 	}
 

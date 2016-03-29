@@ -18,7 +18,7 @@ func (n *Number) Native() reflect.Type { return reflect.TypeOf(float64(1)) }
 // Implements AmfType.Decode
 func (n *Number) Decode(r io.Reader) error {
 	var b [8]byte
-	if _, err := r.Read(b[:]); err != nil {
+	if _, err := io.ReadFull(r, b[:]); err != nil {
 		return err
 	}
 

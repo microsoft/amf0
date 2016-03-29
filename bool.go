@@ -18,7 +18,7 @@ func (b *Bool) Native() reflect.Type { return reflect.TypeOf(false) }
 // Implements AmfType.Decode
 func (b *Bool) Decode(r io.Reader) error {
 	var buf [1]byte
-	if _, err := r.Read(buf[:]); err != nil {
+	if _, err := io.ReadFull(r, buf[:]); err != nil {
 		return err
 	}
 
