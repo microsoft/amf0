@@ -2,8 +2,9 @@ package amf0
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var arrTestData = []byte{0x00, 0x00, 0x00, 0x01, 0x00, 0x03, 0x66,
@@ -11,17 +12,17 @@ var arrTestData = []byte{0x00, 0x00, 0x00, 0x01, 0x00, 0x03, 0x66,
 
 func TestArrayDecodes(t *testing.T) {
 	o := NewArray()
-	err := o.Decode(&reluctantReader{src: arrTestData})
+	err := o.Decode(bytes.NewBuffer(arrTestData))
 
 	assert.Nil(t, err)
-	assert.Equal(t, 1, o.Size())
+	assert.Equal(t, 1, o.Len())
 
 	s, _ := o.String("foo")
-	assert.Equal(t, "bar", s.GetBody())
+	assert.Equal(t, "bar", string(*s))
 
-	_, err = o.Boolean("app")
+	_, err = o.Bool("app")
 	assert.Equal(t, WrongTypeError, err)
-	_, err = o.Boolean("foo")
+	_, err = o.Bool("foo")
 	assert.Equal(t, NotFoundError, err)
 }
 
@@ -29,7 +30,7 @@ func TestArrayBuildsAndEncodes(t *testing.T) {
 	s := NewArray()
 	s.Add("foo", NewString("bar"))
 
-	assert.Equal(t, append([]byte{MARKER_ECMA_ARRAY}, arrTestData...), s.EncodeBytes())
+	assert.Equal(t, arrTestData, s.EncodeBytes())
 }
 
 func BenchmarkArrayDecode(b *testing.B) {

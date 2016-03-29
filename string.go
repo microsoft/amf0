@@ -1,101 +1,95 @@
 package amf0
 
 import (
+	"bytes"
 	"io"
+	"reflect"
 )
 
-// Base string is a variable-length string container used for
-// both String and Long String types
-type baseString struct {
-	bytes   []byte
-	body    string
-	sizeLen int
+type (
+	String     string
+	LongString string
+)
+
+var (
+	_ AmfType = new(String)
+	_ AmfType = new(LongString)
+)
+
+func NewString(str string) *String {
+	s := new(String)
+	*s = String(str)
+
+	return s
 }
 
-// Implements AmfType.Decode
-func (s *baseString) Decode(r io.Reader) error {
-	sizeBytes, err := readBytes(r, s.sizeLen)
-	if err != nil {
-		return err
-	}
+func NewLongString(str string) *LongString {
+	s := new(LongString)
+	*s = LongString(str)
 
-	size := int(getVarUint(sizeBytes, 0, s.sizeLen))
-	s.bytes, err = readBytes(r, size)
-	if err != nil {
-		return nil
+	return s
+}
+
+func (s *String) Marker() byte         { return 0x02 }
+func (s *String) Native() reflect.Type { return reflect.TypeOf("") }
+func (s *String) Decode(r io.Reader) error {
+	if v, err := strDecode(r, 2); err != nil {
+		return err
+	} else {
+		*s = String(v)
 	}
 
 	return nil
 }
-
-// Gets the contents of this message as a byte slice.
-func (s *baseString) GetBytes() []byte {
-	return s.bytes
+func (s *String) Encode(w io.Writer) (int, error) {
+	return strEncode(string(*s), w, 2)
 }
 
-// Returns the string content of this type.
-func (s *baseString) GetBody() string {
-	// The body is decoded lazily, since utf
-	// decoding is relatively expensive.
-	if s.body == "" {
-		s.body = string(s.bytes)
+func (l *LongString) Marker() byte         { return 0x0c }
+func (l *LongString) Native() reflect.Type { return reflect.TypeOf("") }
+func (l *LongString) Decode(r io.Reader) error {
+	if v, err := strDecode(r, 4); err != nil {
+		return err
+	} else {
+		*l = LongString(v)
 	}
 
-	return s.body
+	return nil
+}
+func (l *LongString) Encode(w io.Writer) (int, error) {
+	return strEncode(string(*l), w, 4)
 }
 
-// Sets the trying content of this type.
-func (s *baseString) SetBody(str string) {
-	s.body = str
-	s.bytes = []byte(str)
-}
-
-// Implements AmfType.Encode
-func (s *baseString) Encode(w io.Writer) (int, error) {
-	return w.Write(s.EncodeBytes())
-}
-
-// Implements AmfType.EncodeBytes
-func (s *baseString) EncodeBytes() []byte {
-	bytes := make([]byte, 1+s.sizeLen+len(s.bytes))
-	bytes[0] = MARKER_STRING
-	putVarUint(bytes, 1, uint64(len(s.bytes)), s.sizeLen)
-	copy(bytes[1+s.sizeLen:], s.bytes)
-	return bytes
-}
-
-type String struct{ *baseString }
-type LongString struct{ *baseString }
-
-var _ AmfType = &String{}
-var _ AmfType = &LongString{}
-
-// Creates a new string type, with an optional initial content.
-func NewString(str ...string) *String {
-	s := &String{&baseString{sizeLen: 2}}
-	if len(str) == 1 {
-		s.SetBody(str[0])
+func strDecode(r io.Reader, sizeLen int) (string, error) {
+	sizeBytes := make([]byte, sizeLen)
+	if _, err := io.ReadFull(r, sizeBytes); err != nil {
+		return "", err
 	}
 
-	return s
-}
-
-// Creates a new long string type, with an optional initial content.
-func NewLongString(str ...string) *LongString {
-	s := &LongString{&baseString{sizeLen: 4}}
-	if len(str) == 1 {
-		s.SetBody(str[0])
+	var slen uint64
+	for i := 0; i < sizeLen; i++ {
+		slen |= uint64(sizeBytes[i]) << (uint(sizeLen-i-1) << 3)
 	}
 
-	return s
+	str := make([]byte, int(slen))
+	if _, err := io.ReadFull(r, str); err != nil {
+		return "", err
+	}
+
+	return string(str), nil
 }
 
-// Implements AmfType.Marker
-func (s *String) Marker() byte {
-	return MARKER_STRING
-}
+func strEncode(str string, w io.Writer, sizeLen int) (int, error) {
+	b := new(bytes.Buffer)
+	strLen := len(str)
+	for i := 0; i < sizeLen; i++ {
+		b.WriteByte(byte(strLen >> (uint(sizeLen-i-1) << 3)))
+	}
+	b.WriteString(str)
 
-// Implements AmfType.Marker
-func (s *LongString) Marker() byte {
-	return MARKER_LONG_STRING
+	if n, err := io.Copy(w, b); err != nil {
+		return int(n), err
+	}
+
+	return strLen + sizeLen, nil
 }

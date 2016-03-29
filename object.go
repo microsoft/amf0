@@ -1,36 +1,49 @@
 package amf0
 
 import (
+	"bufio"
 	"bytes"
 	"io"
+	"reflect"
+)
+
+var (
+	ObjectEndSeq = []byte{0x00, 0x00, 0x09}
 )
 
 type Object struct {
-	*paired
+	*Paired
 }
 
-var _ AmfType = &Object{}
-var _ Paired = &Object{}
+var _ AmfType = new(Object)
 
 func NewObject() *Object {
-	return &Object{newPaired()}
+	return &Object{NewPaired()}
 }
 
-var objectEndSeq = []byte{0x00, 0x00, MARKER_OBJECT_END}
+// Implements AmfType.Marker
+func (o *Object) Marker() byte { return 0x03 }
+
+// Implements AmfType.Native
+func (o *Object) Native() reflect.Type { return reflect.TypeOf(o).Elem() }
 
 // Implements AmfType.Decode
 func (o *Object) Decode(r io.Reader) error {
-	rwr := newRwReader(r)
+	br := bufio.NewReader(r)
+
 	for {
-		cont, err := objectShouldContinue(rwr)
+		cont, err := objectShouldContinue(br)
 		if err != nil {
 			return err
 		}
 		if !cont {
+			if _, err = br.Discard(3); err != nil {
+				return err
+			}
 			break
 		}
 
-		if err := o.decodePair(rwr); err != nil {
+		if err := o.decodePair(br); err != nil {
 			return err
 		}
 	}
@@ -40,36 +53,19 @@ func (o *Object) Decode(r io.Reader) error {
 
 // Implements AmfType.Encode
 func (o *Object) Encode(w io.Writer) (int, error) {
-	wc := newWriteCollector(w)
-	wc.Write([]byte{MARKER_OBJECT})
-	o.writePairs(wc)
-	wc.Write(objectEndSeq)
-	return wc.Totals()
-}
-
-// Implements AmfType.EncodeBytes
-func (o *Object) EncodeBytes() []byte {
 	buf := new(bytes.Buffer)
-	o.Encode(buf)
 
-	return buf.Bytes()
+	o.writePairs(buf)
+	buf.Write(ObjectEndSeq)
+
+	n, err := io.Copy(w, buf)
+	return int(n), err
 }
-
-// Implements AmfType.Marker
-func (o *Object) Marker() byte {
-	return MARKER_OBJECT
-}
-
-func objectShouldContinue(r rewindingReader) (bool, error) {
-	b, err := readBytes(r, 3)
+func objectShouldContinue(r *bufio.Reader) (bool, error) {
+	b, err := r.Peek(len(ObjectEndSeq))
 	if err != nil {
 		return false, err
 	}
 
-	if bytes.Compare(objectEndSeq, b) == 0 {
-		return false, nil
-	}
-
-	r.Rewind(b)
-	return true, nil
+	return !bytes.Equal(ObjectEndSeq, b), nil
 }
