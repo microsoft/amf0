@@ -35,3 +35,12 @@ func TestMarshallingNonNativeMembers(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, []byte{0x3, 0x0, 0x0, 0x9}, buf)
 }
+
+func TestMarshallingNilTypes(t *testing.T) {
+	buf, err := encoding.Marshal(&struct {
+		Foo *amf0.Object
+	}{ /* Foo will be a nil pointer */ })
+
+	assert.Nil(t, err)
+	assert.Equal(t, []byte{0x05}, buf)
+}

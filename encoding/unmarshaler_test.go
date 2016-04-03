@@ -40,3 +40,16 @@ func TestStructScanWithoutConverstion(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, amf0.Bool(true), target.Foo)
 }
+
+func TestStrucScanWithNil(t *testing.T) {
+	target := struct {
+		Foo *amf0.Object
+	}{}
+
+	err := encoding.Unmarshal(bytes.NewBuffer([]byte{
+		0x05, // <null>
+	}), &target)
+
+	assert.Nil(t, err)
+	assert.Nil(t, target.Foo)
+}
