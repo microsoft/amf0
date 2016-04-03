@@ -60,7 +60,9 @@ func (u *Unmarshaler) Unmarshal(dest interface{}) error {
 // isBodyless returns a bool representing whether or not the given amf0.Type is
 // bodyless or not.
 func (u *Unmarshaler) isBodyless(t amf0.AmfType) bool {
-	_, isBodyless := t.(amf0.Bodyless)
+	if v, isBodyless := t.(amf0.Bodyless); isBodyless {
+		return v.IsBodyless()
+	}
 
-	return isBodyless
+	return false
 }
