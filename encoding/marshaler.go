@@ -31,6 +31,9 @@ func NewMarshaler() *Marshaler {
 // through each field of a type one-by-one and marshals it by converting to its
 // AMF type. If a field is already an AMF type, it marshals it directly. It does
 // not recurse to embedded fields.
+//
+// If the field is nil (i.e., an uninitialized pointer), then an amf0.Null will
+// be written, instead of the actual type.
 func (m *Marshaler) Marshal(dest interface{}) ([]byte, error) {
 	buf := new(bytes.Buffer)
 
@@ -50,6 +53,10 @@ func (m *Marshaler) Marshal(dest interface{}) ([]byte, error) {
 }
 
 func (m *Marshaler) convertToAmfType(val reflect.Value) (amf0.AmfType, error) {
+	if val.Kind() == reflect.Ptr && val.IsNil() {
+		return new(amf0.Null), nil
+	}
+
 	amfType := m.i.AmfType(val.Interface())
 	if amfType == nil {
 		return nil, noMatchingType(val.Type().String())

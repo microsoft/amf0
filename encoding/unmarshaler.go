@@ -32,6 +32,9 @@ func NewUnmarshaler(r io.Reader) *Unmarshaler {
 
 // Unmarshal fills each field in the givne interface{} with the AMF data on the
 // stream in-order.
+//
+// If a value of amf0.Null or amf0.Undefined is read, then the value will be
+// skipped.
 func (u *Unmarshaler) Unmarshal(dest interface{}) error {
 	v := reflect.ValueOf(dest).Elem()
 
@@ -43,9 +46,23 @@ func (u *Unmarshaler) Unmarshal(dest interface{}) error {
 			return err
 		}
 
+		if u.isBodyless(next) {
+			continue
+		}
+
 		val := reflect.ValueOf(next).Elem()
 		field.Set(val.Convert(field.Type()))
 	}
 
 	return nil
+}
+
+// isBodyless returns a bool representing whether or not the given amf0.Type is
+// bodyless or not.
+func (u *Unmarshaler) isBodyless(t amf0.AmfType) bool {
+	if v, isBodyless := t.(amf0.Bodyless); isBodyless {
+		return v.IsBodyless()
+	}
+
+	return false
 }
