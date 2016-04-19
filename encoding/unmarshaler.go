@@ -1,6 +1,7 @@
 package encoding
 
 import (
+	"fmt"
 	"io"
 	"reflect"
 
@@ -35,6 +36,9 @@ func NewUnmarshaler(r io.Reader) *Unmarshaler {
 //
 // If a value of amf0.Null or amf0.Undefined is read, then the value will be
 // skipped.
+//
+// If a pointer field type is reached, then the value will be reduced to match
+// that same pointer type.
 func (u *Unmarshaler) Unmarshal(dest interface{}) error {
 	v := reflect.ValueOf(dest).Elem()
 
@@ -47,14 +51,38 @@ func (u *Unmarshaler) Unmarshal(dest interface{}) error {
 		}
 
 		if u.isBodyless(next) {
+			if !u.canAssignNil(field) {
+				return fmt.Errorf(
+					"amf0: unable to assign nil to type %T",
+					field.Interface())
+			}
+
 			continue
 		}
 
-		val := reflect.ValueOf(next).Elem()
+		var val reflect.Value
+		if u.canAssignNil(field) {
+			val = reflect.ValueOf(next)
+		} else {
+			val = reflect.ValueOf(next).Elem()
+		}
+
 		field.Set(val.Convert(field.Type()))
 	}
 
 	return nil
+}
+
+func (u *Unmarshaler) canAssignNil(f reflect.Value) bool {
+	kind := f.Kind()
+
+	return kind == reflect.Array ||
+		kind == reflect.Chan ||
+		kind == reflect.Func ||
+		kind == reflect.Interface ||
+		kind == reflect.Map ||
+		kind == reflect.Ptr ||
+		kind == reflect.Slice
 }
 
 // isBodyless returns a bool representing whether or not the given amf0.Type is
