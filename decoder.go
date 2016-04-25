@@ -3,7 +3,6 @@ package amf0
 import (
 	"fmt"
 	"io"
-	"reflect"
 )
 
 type UnknownPacketError byte
@@ -26,11 +25,10 @@ var (
 			return nil, UnknownPacketError(typeId[0])
 		}
 
-		packet := reflect.New(typ).Interface().(AmfType)
-		if err := packet.Decode(r); err != nil {
+		if err := typ.Decode(r); err != nil {
 			return nil, err
 		}
 
-		return packet, nil
+		return typ, nil
 	}
 )

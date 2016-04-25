@@ -8,6 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	BoolFactory = func() amf0.AmfType { return new(amf0.Bool) }
+)
+
 func TestIdentifierConstruction(t *testing.T) {
 	i := amf0.NewIdentifier()
 
@@ -15,11 +19,11 @@ func TestIdentifierConstruction(t *testing.T) {
 }
 
 func TestFetchingKnownPacketTypes(t *testing.T) {
-	i := amf0.NewIdentifier(new(amf0.Bool))
+	i := amf0.NewIdentifier(BoolFactory)
 
-	typ := i.TypeOf(0x01)
+	v := i.TypeOf(0x01)
 
-	assert.Equal(t, reflect.TypeOf(new(amf0.Bool)).Elem(), typ)
+	assert.IsType(t, new(amf0.Bool), v)
 }
 
 func TestFetchingUnknownPacketTypes(t *testing.T) {
@@ -31,7 +35,7 @@ func TestFetchingUnknownPacketTypes(t *testing.T) {
 }
 
 func TestFetchingKnownPacketNatives(t *testing.T) {
-	i := amf0.NewIdentifier(new(amf0.Bool))
+	i := amf0.NewIdentifier(BoolFactory)
 
 	typ := i.AmfType(false)
 

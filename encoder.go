@@ -27,3 +27,13 @@ var (
 		return int(n), err
 	}
 )
+
+// EncodeToBytes uses the default Encoder to marshal the given AmfType `t` to a
+// []byte, instead of writing to an io.Writer. Any error returned above will be
+// returned here.
+func EncodeToBytes(t AmfType) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	_, err := Encode(t, buf)
+
+	return buf.Bytes(), err
+}

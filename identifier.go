@@ -18,45 +18,76 @@ import "reflect"
 //	  #=> (reflect.TypeOf(new(amf0.Bool)).Elem())
 //	```
 type Identifier struct {
-	ids  map[byte]reflect.Type
-	typs map[reflect.Type]reflect.Type
+	ids  map[byte]TypeFactory
+	typs map[reflect.Type]TypeFactory
 }
+
+// TypeFactory is a factory type that returns new instances of a specific
+// AmfType.
+type TypeFactory func() AmfType
 
 var (
 	// DefaultIdentifier is the default implementation of the Identifier
 	// type. It holds knowledge of all implemented amf0 types in this
 	// package.
-	DefaultIdentifier *Identifier = NewIdentifier(
-		new(Array), new(Null), new(Undefined), new(Bool), new(Number),
-		new(Object), new(String), new(LongString),
+	DefaultIdentifier = NewIdentifier(
+		func() AmfType { return &Array{NewPaired()} },
+		func() AmfType { return new(Null) },
+		func() AmfType { return new(Undefined) },
+		func() AmfType { return new(Bool) },
+		func() AmfType { return new(Number) },
+		func() AmfType { return &Object{NewPaired()} },
+		func() AmfType { return new(String) },
+		func() AmfType { return new(LongString) },
 	)
 )
 
 // NewIdentifier returns a pointer to a new instance of the Identifier type. By
 // calling this method, all of the TypeOf and AmfType permutations are
 // precomputed, saving tiem in the future.
-func NewIdentifier(types ...AmfType) *Identifier {
+func NewIdentifier(types ...TypeFactory) *Identifier {
 	i := &Identifier{
-		ids:  make(map[byte]reflect.Type),
-		typs: make(map[reflect.Type]reflect.Type),
+		ids:  make(map[byte]TypeFactory),
+		typs: make(map[reflect.Type]TypeFactory),
 	}
 
-	for _, t := range types {
-		typ := reflect.TypeOf(t).Elem()
+	for _, f := range types {
+		t := f()
 
-		i.ids[t.Marker()] = typ
-		i.typs[t.Native()] = typ
+		i.ids[t.Marker()] = f
+		i.typs[t.Native()] = f
 	}
 
 	return i
 }
 
 // TypeOf returns the AmfType assosciated with a given marker ID.
-func (i *Identifier) TypeOf(id byte) reflect.Type {
-	return i.ids[id]
+func (i *Identifier) TypeOf(id byte) AmfType {
+	f := i.ids[id]
+	if f == nil {
+		return nil
+	}
+
+	return f()
 }
 
-// AmfType returns the AmfType assosciated with a given primitive.
+// DEPRECATED: AmfType returns the AmfType assosciated with a given primitive.
 func (i *Identifier) AmfType(v interface{}) reflect.Type {
-	return i.typs[reflect.TypeOf(v)]
+	t := i.NewMatchingType(v)
+	if t == nil {
+		return nil
+	}
+
+	return reflect.TypeOf(t).Elem()
+}
+
+// NewMatchingType returns a new instance of an AmfType in the same kind as
+// given by v. If no matching type is found, nil is returned instead.
+func (i *Identifier) NewMatchingType(v interface{}) AmfType {
+	f := i.typs[reflect.TypeOf(v)]
+	if f == nil {
+		return nil
+	}
+
+	return f()
 }
