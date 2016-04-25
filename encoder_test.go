@@ -38,3 +38,16 @@ func TestUnsuccessfulEncodingReturnsError(t *testing.T) {
 	assert.Equal(t, 0, n)
 	assert.Equal(t, "test", err.Error())
 }
+
+func TestEncodeToBytesDoesNotMangleOutput(t *testing.T) {
+	s := amf0.NewString("hello world")
+
+	buf := new(bytes.Buffer)
+
+	n, e1 := amf0.Encode(s, buf)
+	out, e2 := amf0.EncodeToBytes(s)
+
+	assert.Len(t, out, n)
+	assert.Equal(t, buf.Bytes(), out)
+	assert.Equal(t, e1, e2)
+}
