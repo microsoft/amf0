@@ -11,6 +11,13 @@ type Number float64
 
 var _ AmfType = new(Number)
 
+func NewNumber(n float64) *Number {
+	num := new(Number)
+	*num = Number(n)
+
+	return num
+}
+
 func (n *Number) Marker() byte { return 0x00 }
 
 func (n *Number) Native() reflect.Type { return reflect.TypeOf(float64(1)) }
