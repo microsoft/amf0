@@ -57,9 +57,9 @@ func (m *Marshaler) convertToAmfType(val reflect.Value) (amf0.AmfType, error) {
 		return new(amf0.Null), nil
 	}
 
-	amf := m.i.NewMatchingType(val.Interface())
+	amf := m.i.NewMatchingTypeFromValue(val)
 	if amf == nil {
-		return nil, noMatchingType(val.Type().String())
+		return nil, noMatchingType{val.Type()}
 	}
 
 	amft := reflect.ValueOf(amf)
@@ -74,16 +74,17 @@ func (m *Marshaler) convertToAmfType(val reflect.Value) (amf0.AmfType, error) {
 	if !val.Type().ConvertibleTo(toType) {
 		return nil, typeUnassignable{val.Type(), amft.Type().Elem()}
 	}
-
-	amft.Set(val.Convert(toType))
+	amft.Elem().Set(val.Convert(toType))
 
 	return amf, nil
 }
 
-type noMatchingType string
+type noMatchingType struct {
+	typ reflect.Type
+}
 
 func (e noMatchingType) Error() string {
-	return fmt.Sprintf("amf0/encoding: no matching type for %s", string(e))
+	return fmt.Sprintf("amf0/encoding: no matching type for %s", e.typ.String())
 }
 
 type typeUnassignable struct {
