@@ -57,19 +57,27 @@ func (m *Marshaler) convertToAmfType(val reflect.Value) (amf0.AmfType, error) {
 		return new(amf0.Null), nil
 	}
 
-	amfType := m.i.AmfType(val.Interface())
-	if amfType == nil {
+	amf := m.i.NewMatchingType(val.Interface())
+	if amf == nil {
 		return nil, noMatchingType(val.Type().String())
 	}
 
-	if !val.Type().ConvertibleTo(amfType) {
-		return nil, typeUnassignable{val.Type(), amfType}
+	amft := reflect.ValueOf(amf)
+
+	var toType reflect.Type
+	if val.Kind() == reflect.Ptr {
+		toType = amft.Type()
+	} else {
+		toType = amft.Type().Elem()
 	}
 
-	v := reflect.New(amfType).Elem()
-	v.Set(val.Convert(amfType))
+	if !val.Type().ConvertibleTo(toType) {
+		return nil, typeUnassignable{val.Type(), amft.Type().Elem()}
+	}
 
-	return v.Addr().Interface().(amf0.AmfType), nil
+	amft.Set(val.Convert(toType))
+
+	return amf, nil
 }
 
 type noMatchingType string

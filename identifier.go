@@ -1,6 +1,9 @@
 package amf0
 
-import "reflect"
+import (
+	"fmt"
+	"reflect"
+)
 
 // Identifier is a type capable of preforming bi-direcitonal lookups with
 // respect to the various AmfTypes implemented here. It has two discrete
@@ -71,21 +74,18 @@ func (i *Identifier) TypeOf(id byte) AmfType {
 	return f()
 }
 
-// DEPRECATED: AmfType returns the AmfType assosciated with a given primitive.
-func (i *Identifier) AmfType(v interface{}) reflect.Type {
-	t := i.NewMatchingType(v)
-	if t == nil {
-		return nil
-	}
-
-	return reflect.TypeOf(t).Elem()
-}
-
 // NewMatchingType returns a new instance of an AmfType in the same kind as
 // given by v. If no matching type is found, nil is returned instead.
 func (i *Identifier) NewMatchingType(v interface{}) AmfType {
 	f := i.typs[reflect.TypeOf(v)]
 	if f == nil {
+		rv := reflect.ValueOf(v)
+		if rv.Kind() == reflect.Ptr || rv.Kind() == reflect.Interface {
+			fmt.Println("A")
+			return i.NewMatchingType(rv.Elem())
+		}
+		fmt.Println("B")
+
 		return nil
 	}
 

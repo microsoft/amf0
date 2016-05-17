@@ -25,7 +25,7 @@ func NewObject() *Object {
 func (o *Object) Marker() byte { return 0x03 }
 
 // Implements AmfType.Native
-func (o *Object) Native() reflect.Type { return reflect.TypeOf(o).Elem() }
+func (o *Object) Native() reflect.Type { return reflect.TypeOf(o) }
 
 // Implements AmfType.Decode
 func (o *Object) Decode(r io.Reader) error {
