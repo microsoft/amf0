@@ -62,10 +62,13 @@ func (m *Marshaler) convertToAmfType(val reflect.Value) (amf0.AmfType, error) {
 		return nil, noMatchingType{val.Type()}
 	}
 
-	amft := reflect.ValueOf(amf)
+	var (
+		toType reflect.Type
+		amft   = reflect.ValueOf(amf)
+		isPtr  = val.Kind() == reflect.Ptr
+	)
 
-	var toType reflect.Type
-	if val.Kind() == reflect.Ptr {
+	if isPtr {
 		toType = amft.Type()
 	} else {
 		toType = amft.Type().Elem()
@@ -74,7 +77,12 @@ func (m *Marshaler) convertToAmfType(val reflect.Value) (amf0.AmfType, error) {
 	if !val.Type().ConvertibleTo(toType) {
 		return nil, typeUnassignable{val.Type(), amft.Type().Elem()}
 	}
-	amft.Elem().Set(val.Convert(toType))
+
+	val = val.Convert(toType)
+	if isPtr {
+		val = val.Elem()
+	}
+	amft.Elem().Set(val)
 
 	return amf, nil
 }
