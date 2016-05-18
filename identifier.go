@@ -71,23 +71,23 @@ func (i *Identifier) TypeOf(id byte) AmfType {
 	return f()
 }
 
-// DEPRECATED: AmfType returns the AmfType assosciated with a given primitive.
-func (i *Identifier) AmfType(v interface{}) reflect.Type {
-	t := i.NewMatchingType(v)
-	if t == nil {
-		return nil
+// NewMatchingTypeFromValue returns a new instance of an AmfType in the
+// same kind as given by v. If no matching type is found,
+// nil is returned instead.
+func (i *Identifier) NewMatchingTypeFromValue(val reflect.Value) AmfType {
+	if f := i.typs[val.Type()]; f != nil {
+		return f()
 	}
 
-	return reflect.TypeOf(t).Elem()
+	if val.Kind() != reflect.Ptr {
+		return i.NewMatchingTypeFromValue(val.Addr())
+	}
+
+	return nil
 }
 
 // NewMatchingType returns a new instance of an AmfType in the same kind as
 // given by v. If no matching type is found, nil is returned instead.
 func (i *Identifier) NewMatchingType(v interface{}) AmfType {
-	f := i.typs[reflect.TypeOf(v)]
-	if f == nil {
-		return nil
-	}
-
-	return f()
+	return i.NewMatchingType(reflect.ValueOf(v))
 }
